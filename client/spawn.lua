@@ -99,3 +99,34 @@ RegisterNetEvent('rsg-character:client:OpenSpawnSelect', function(lastPos)
 
     OpenSpawnMenu()
 end)
+
+RegisterNetEvent('RSGCore:Client:OnPlayerLoaded', function()
+    local spawnChecks = RSG.SpawnChecks
+    if not spawnChecks then
+        return
+    end
+
+    local playerPed = PlayerPedId()
+    local playerCoords = GetEntityCoords(playerPed)
+
+    if Config.Debug then
+        print('Checking spawn: ' .. tostring(playerCoords))
+    end
+
+    for checkName, check in pairs(spawnChecks) do
+        local radius = check.Radius or check.radius or 200
+        local moveTo = getFirstVector(check.moveTo)
+
+        if moveTo then
+            for _, badSpawn in ipairs(check.badSpawn or {}) do
+                if #(playerCoords - badSpawn) < radius then
+                    if Config.Debug then
+                        print(('Bad spawn matched: %s'):format(checkName))
+                    end
+                    SetEntityCoords(playerPed, moveTo.x, moveTo.y, moveTo.z, 0, 0, 0, false)
+                    return
+                end
+            end
+        end
+    end
+end)

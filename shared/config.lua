@@ -115,6 +115,18 @@ RSG.SpawnLocations = {
     { label = locale('spawn_locations.blackwater'),  coords = vector4(-1035.71, -2731.87, 12.86, 0.0), image = 'img/spawn/blackwater.jpg' },
 }
 
+RSG.SpawnChecks = {
+    ["Character Creation"] = {
+        badSpawn = {
+            vector3(4234.78, -717.32, 50.12, 151.79),
+        },
+        moveTo = {
+            vector3(-169.47, 629.38, 113.03, 236.72), -- valentine
+        },
+        Radius = 200,
+    },
+}
+
 RSG.CameraPromptText = locale('camera_prompt_text')
 RSG.RotatePromptText = locale('rotate_prompt_text')
 RSG.ZoomPromptText = locale('zoom_prompt_text')
