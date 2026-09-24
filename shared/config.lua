@@ -123,7 +123,7 @@ RSG.SpawnChecks = {
             vector3(4234.78, -717.32, 50.12, 151.79),
         },
         moveTo = {
-            vector3(-169.47, 629.38, 113.03, 236.72), -- valentine
+            vector3(-169.47, 629.38, 113.03), -- valentine
         },
         Radius = 200,
     },
