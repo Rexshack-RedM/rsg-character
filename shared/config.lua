@@ -1,5 +1,7 @@
 RSG = {}
 
+RSG.Debug = false
+
 RSG.ProfanityWords = {
     ['bad word'] = true,
     ['dick'] = true,

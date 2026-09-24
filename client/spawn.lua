@@ -109,7 +109,7 @@ RegisterNetEvent('RSGCore:Client:OnPlayerLoaded', function()
     local playerPed = PlayerPedId()
     local playerCoords = GetEntityCoords(playerPed)
 
-    if Config.Debug then
+    if RSG.Debug then
         print('Checking spawn: ' .. tostring(playerCoords))
     end
 
@@ -120,7 +120,7 @@ RegisterNetEvent('RSGCore:Client:OnPlayerLoaded', function()
         if moveTo then
             for _, badSpawn in ipairs(check.badSpawn or {}) do
                 if #(playerCoords - badSpawn) < radius then
-                    if Config.Debug then
+                    if RSG.Debug then
                         print(('Bad spawn matched: %s'):format(checkName))
                     end
                     SetEntityCoords(playerPed, moveTo.x, moveTo.y, moveTo.z, 0, 0, 0, false)
