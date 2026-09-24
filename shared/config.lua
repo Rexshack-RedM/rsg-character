@@ -120,7 +120,7 @@ RSG.SpawnLocations = {
 RSG.SpawnChecks = {
     ["Character Creation"] = {
         badSpawn = {
-            vector3(4234.78, -717.32, 50.12, 151.79),
+            vector3(4234.78, -717.32, 50.12),
         },
         moveTo = {
             vector3(-169.47, 629.38, 113.03), -- valentine
