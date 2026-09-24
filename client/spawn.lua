@@ -100,6 +100,13 @@ RegisterNetEvent('rsg-character:client:OpenSpawnSelect', function(lastPos)
     OpenSpawnMenu()
 end)
 
+local function getFirstVector(value)
+    if type(value) == 'table' then
+        return value[1]
+    end
+    return value
+end
+
 RegisterNetEvent('RSGCore:Client:OnPlayerLoaded', function()
     local spawnChecks = RSG.SpawnChecks
     if not spawnChecks then
