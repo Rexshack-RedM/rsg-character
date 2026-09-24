@@ -1,19 +1,23 @@
-lib.locale()
+-----------------------------------------------------------------------
+-- Improved Version Checker for Rexshack-RedM Resources
+----------------------------------------------------------------------- 
+
 local resourceName = GetCurrentResourceName()
-local githubRawBase = 'https://raw.githubusercontent.com/RexShackGaming/rex-versioncheckers/main/'
+local githubRawBase = 'https://raw.githubusercontent.com/Rexshack-RedM/rsg-versioncheckers/main/'
 
 local function printLog(type, message)
     local color = (type == 'success' and '^2') or (type == 'warning' and '^3') or '^1'
     print(('[%s]%s %s^7'):format(resourceName, color, message))
 end
 
+-- Simple semantic version comparison (supports major.minor.patch)
 local function isVersionOutdated(current, latest)
     local function splitVersion(v)
         local major, minor, patch = v:match("(%d+)%.(%d+)%.(%d+)")
         if major then
             return {tonumber(major), tonumber(minor) or 0, tonumber(patch) or 0}
         end
-        return {0, 0, 0}
+        return {0, 0, 0} -- fallback
     end
 
     local c = splitVersion(current)
@@ -24,7 +28,7 @@ local function isVersionOutdated(current, latest)
         elseif l[i] < c[i] then return false
         end
     end
-    return false
+    return false -- equal
 end
 
 local function CheckVersion()
@@ -47,6 +51,7 @@ local function CheckVersion()
             return
         end
 
+        -- Trim whitespace/newlines
         remoteVersion = remoteVersion:gsub('%s+$', '')
 
         if currentVersion == remoteVersion then
@@ -56,11 +61,14 @@ local function CheckVersion()
 
         if isVersionOutdated(currentVersion, remoteVersion) then
             printLog('error', ('OUTDATED! Please update to version %s'):format(remoteVersion))
-            printLog('error', 'Download from: https://portal.cfx.re/assets/granted-assets')
+            printLog('error', 'Download from: https://github.com/Rexshack-RedM/'..GetCurrentResourceName()..'')
         else
             printLog('warning', ('You are running a newer version (%s) than the remote (%s). Possible dev build?'):format(currentVersion, remoteVersion))
         end
     end, 'GET')
 end
 
+--------------------------------------------------------------------------------------------------
+-- Start version check on resource start
+--------------------------------------------------------------------------------------------------
 CheckVersion()
