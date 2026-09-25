@@ -338,7 +338,7 @@
         "back": "Înapoi",
         "camera": {
             "rotate": "Rotire",
-            "height": "Înălțime",
+            "height": "Sus/Jos",
             "zoom": "Zoom",
             "rotate_left_title": "Rotește personajul la stânga",
             "rotate_right_title": "Rotește personajul la dreapta",

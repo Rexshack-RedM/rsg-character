@@ -338,7 +338,7 @@
         "back": "Terug",
         "camera": {
             "rotate": "Draaien",
-            "height": "Hoogte",
+            "height": "Omhoog/Omlaag",
             "zoom": "Zoom",
             "rotate_left_title": "Personage naar links draaien",
             "rotate_right_title": "Personage naar rechts draaien",

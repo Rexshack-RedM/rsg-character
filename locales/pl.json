@@ -338,7 +338,7 @@
         "back": "Wstecz",
         "camera": {
             "rotate": "Obrót",
-            "height": "Wysokość",
+            "height": "Góra/Dół",
             "zoom": "Zoom",
             "rotate_left_title": "Obróć postać w lewo",
             "rotate_right_title": "Obróć postać w prawo",

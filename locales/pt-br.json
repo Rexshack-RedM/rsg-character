@@ -338,7 +338,7 @@
         "back": "Voltar",
         "camera": {
             "rotate": "Girar",
-            "height": "Altura",
+            "height": "Cima/Baixo",
             "zoom": "Zoom",
             "rotate_left_title": "Girar personagem para a esquerda",
             "rotate_right_title": "Girar personagem para a direita",

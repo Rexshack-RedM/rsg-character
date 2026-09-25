@@ -338,7 +338,7 @@
         "back": "Zurück",
         "camera": {
             "rotate": "Drehen",
-            "height": "Höhe",
+            "height": "Hoch/Runter",
             "zoom": "Zoom",
             "rotate_left_title": "Charakter nach links drehen",
             "rotate_right_title": "Charakter nach rechts drehen",

@@ -338,7 +338,7 @@
         "back": "戻る",
         "camera": {
             "rotate": "回転",
-            "height": "高さ",
+            "height": "上/下",
             "zoom": "ズーム",
             "rotate_left_title": "キャラクターを左に回転",
             "rotate_right_title": "キャラクターを右に回転",

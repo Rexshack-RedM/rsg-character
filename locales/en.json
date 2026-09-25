@@ -338,7 +338,7 @@
         "back": "Back",
         "camera": {
             "rotate": "Rotate",
-            "height": "Height",
+            "height": "Up/Down",
             "zoom": "Zoom",
             "rotate_left_title": "Rotate character left",
             "rotate_right_title": "Rotate character right",
