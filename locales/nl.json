@@ -351,13 +351,7 @@
         },
         "total": "TOTAAL",
         "cancel": "Annuleren",
-        "confirm": "Bevestigen",
-        "notify_types": {
-            "info": "INFO",
-            "success": "SUCCES",
-            "warning": "WAARSCHUWING",
-            "error": "FOUT"
-        }
+        "confirm": "Bevestigen"
     },
     "clothing_validation": {
         "title": "Fout",
@@ -393,7 +387,6 @@
             "description": "**%s %s** (burger-ID **%s**) is verwijderd."
         },
         "appearance_saved": {
-            "title_update": "Uiterlijk bijgewerkt",
             "title_initial": "Eerste uiterlijk opgeslagen",
             "description": "Uiterlijk/kleding opgeslagen voor burger-ID **%s**.",
             "field_citizenid": "Burger-ID"
@@ -433,5 +426,7 @@
         "cuban": "Cubaans",
         "native_american": "Inheems Amerikaans",
         "other": "Anders"
-    }
+    },
+    "outfit_limit_reached": "You can only store %s outfits - this one was not saved to your wardrobe",
+    "outfit_delete_confirm": "Delete this outfit?"
 }

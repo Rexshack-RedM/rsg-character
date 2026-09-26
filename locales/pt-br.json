@@ -351,13 +351,7 @@
         },
         "total": "TOTAL",
         "cancel": "Cancelar",
-        "confirm": "Confirmar",
-        "notify_types": {
-            "info": "INFO",
-            "success": "SUCESSO",
-            "warning": "AVISO",
-            "error": "ERRO"
-        }
+        "confirm": "Confirmar"
     },
     "clothing_validation": {
         "title": "Erro",
@@ -393,7 +387,6 @@
             "description": "**%s %s** (ID de cidadão **%s**) foi excluído."
         },
         "appearance_saved": {
-            "title_update": "Aparência atualizada",
             "title_initial": "Aparência inicial salva",
             "description": "Aparência/roupas salvas para o ID de cidadão **%s**.",
             "field_citizenid": "ID de cidadão"
@@ -433,5 +426,7 @@
         "cuban": "Cubano",
         "native_american": "Nativo americano",
         "other": "Outro"
-    }
+    },
+    "outfit_limit_reached": "You can only store %s outfits - this one was not saved to your wardrobe",
+    "outfit_delete_confirm": "Delete this outfit?"
 }

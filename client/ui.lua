@@ -171,17 +171,6 @@ RegisterNUICallback("charInfoDelete", function(data, cb)
     TriggerEvent("rsg-character:client:CharInfoDelete")
 end)
 
-function UI.notify(opts)
-    opts = opts or {}
-    SendNUIMessage({
-        action = "notify",
-        title = opts.title,
-        description = opts.description,
-        notifyType = opts.type or "info",
-        duration = opts.duration or 5000,
-    })
-end
-
 local function BuildLocaleStrings()
     return {
         back = locale('ui.back'),
@@ -211,12 +200,6 @@ local function BuildLocaleStrings()
             create = locale('charselect.info.create'),
             genderMale = locale('charselect.gender.male'),
             genderFemale = locale('charselect.gender.female'),
-        },
-        notifyTypes = {
-            info = locale('ui.notify_types.info'),
-            success = locale('ui.notify_types.success'),
-            warning = locale('ui.notify_types.warning'),
-            error = locale('ui.notify_types.error'),
         },
     }
 end

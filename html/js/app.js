@@ -47,7 +47,6 @@
     const spawnSelectSubtitle = document.getElementById("spawn-select-subtitle");
     const spawnSelectCards = document.getElementById("spawn-select-cards");
 
-    const toastStack = document.getElementById("toast-stack");
     const cameraMoveBar = document.getElementById("camera-move-bar");
     const camUpBtn = document.getElementById("cam-up");
     const camDownBtn = document.getElementById("cam-down");
@@ -64,7 +63,6 @@
 
     let currentElements = [];
 
-    let notifyTypeLabels = { info: "INFO", success: "SUCCESS", warning: "WARNING", error: "ERROR" };
     let charInfoPlayLabel = "Play";
     let charInfoCreateLabel = "Create";
 
@@ -104,7 +102,6 @@
             dialogSubmit.textContent = s.confirm;
             alertConfirm.textContent = s.confirm;
         }
-        if (s.notifyTypes) notifyTypeLabels = Object.assign({}, notifyTypeLabels, s.notifyTypes);
     }
 
     function post(cb, data) {
@@ -357,23 +354,6 @@
     charInfoPlay.addEventListener("click", () => post("charInfoPlay", {}));
     charInfoDelete.addEventListener("click", () => post("charInfoDelete", {}));
 
-    function updateElement(msg) {
-        const el = currentElements[msg.index];
-        if (!el) return;
-        el[msg.prop] = msg.value;
-        renderMenu({ title: menuTitle.textContent, subtitle: menuSubtitle.textContent, elements: currentElements });
-    }
-
-    function addElement(msg) {
-        currentElements.push(msg.element);
-        renderMenu({ title: menuTitle.textContent, subtitle: menuSubtitle.textContent, elements: currentElements });
-    }
-
-    function removeElement(msg) {
-        currentElements.splice(msg.index, 1);
-        renderMenu({ title: menuTitle.textContent, subtitle: menuSubtitle.textContent, elements: currentElements });
-    }
-
     function closeAll() {
         hide(menuPanel);
         hide(dialogModal);
@@ -534,39 +514,6 @@
         hide(loadingScreen);
     }
 
-    function notify(msg) {
-        const toast = document.createElement("div");
-        toast.className = `toast ${msg.notifyType || "info"}`;
-
-        const label = document.createElement("div");
-        label.className = "toast-label";
-        const notifyType = msg.notifyType || "info";
-        label.textContent = notifyTypeLabels[notifyType] || notifyType.toUpperCase();
-        toast.appendChild(label);
-
-        if (msg.title) {
-            const title = document.createElement("div");
-            title.className = "toast-title";
-            title.textContent = msg.title;
-            toast.appendChild(title);
-        }
-
-        if (msg.description) {
-            const desc = document.createElement("div");
-            desc.className = "toast-desc";
-            desc.textContent = msg.description;
-            toast.appendChild(desc);
-        }
-
-        toastStack.appendChild(toast);
-
-        const duration = msg.duration || 5000;
-        setTimeout(() => {
-            toast.classList.add("out");
-            setTimeout(() => toast.remove(), 250);
-        }, duration);
-    }
-
     function bindCameraMoveButton(btn, direction) {
         if (!btn) return;
 
@@ -630,15 +577,11 @@
 
         switch (msg.action) {
             case "openMenu": renderMenu(msg); break;
-            case "updateElement": updateElement(msg); break;
-            case "addElement": addElement(msg); break;
-            case "removeElement": removeElement(msg); break;
             case "closeAll": closeAll(); break;
             case "showCharInfo": showCharInfo(msg); break;
             case "hideCharInfo": hideCharInfo(); break;
             case "dialog": openDialog(msg); break;
             case "alert": openAlert(msg); break;
-            case "notify": notify(msg); break;
             case "setLocale": applyLocale(msg); break;
             case "showLoadingScreen": showLoadingScreen(msg); break;
             case "hideLoadingScreen": hideLoadingScreen(); break;

@@ -1,5 +1,4 @@
 RSGCore = exports['rsg-core']:GetCoreObject()
-BucketId = GetRandomIntInRange(0, 0xffffff)
 ComponentsMale = {}
 ComponentsFemale = {}
 ComponentsReady = false
@@ -186,83 +185,48 @@ CreateThread(function()
 end)
 
 function ApplySkin()
-    local _Target = PlayerPedId()
-    local citizenid = RSGCore.Functions.GetPlayerData().citizenid
-    local currentHealth = LocalPlayer.state.health or GetEntityHealth(_Target)
-    local dirtClothes = GetAttributeBaseRank(_Target, 16)
-    local dirtHat = GetAttributeBaseRank(_Target, 17)
-    local dirtSkin = GetAttributeBaseRank(_Target, 22)
+    local data = lib.callback.await('rsg-character:server:getAppearance', 10000)
+    if not data or not data.skin then return end
 
-    local promise = promise.new()
-    local resolved = false
-    local function resolveOnce()
-        if resolved then return end
-        resolved = true
-        promise:resolve()
-    end
-    CreateThread(function()
-        Wait(10000)
-        if not resolved then
-            resolveOnce()
-        end
+    local ped = PlayerPedId()
+    local currentHealth = GetEntityHealth(ped)
+    local dirtClothes = GetAttributeBaseRank(ped, 16)
+    local dirtHat = GetAttributeBaseRank(ped, 17)
+    local dirtSkin = GetAttributeBaseRank(ped, 22)
+    local skin = data.skin
+
+    LoadModel(ped, GetPedModel(tonumber(skin.sex)))
+    ped = PlayerPedId()
+    SetEntityAlpha(ped, 0)
+    LoadedComponents = skin
+
+    local ok, err = pcall(function()
+        FixIssues(ped)
+        LoadHeight(ped, skin)
+        LoadBoody(ped, skin)
+        LoadHead(ped, skin)
+        LoadHair(ped, skin)
+        LoadBeard(ped, skin)
+        LoadEyes(ped, skin)
+        LoadFeatures(ped, skin)
+        LoadBodyFeature(ped, skin.body_size, Data.Appearance.body_size)
+        LoadBodyFeature(ped, skin.body_waist, Data.Appearance.body_waist)
+        LoadBodyFeature(ped, skin.chest_size, Data.Appearance.chest_size)
+        LoadOverlays(ped, skin)
+        SetEntityHealth(ped, currentHealth, 0)
+        Citizen.InvokeNative(0x8899C244EBCF70DE, PlayerId(), 0.0) -- health recharge multiplier
+        Citizen.InvokeNative(0xDE1B1907A83A1550, ped, 0)
     end)
-    RSGCore.Functions.TriggerCallback('rsg-multicharacter:server:getAppearance', function(data)
-        if resolved or not data or not data.skin then
-            resolveOnce()
-            return
-        end
-        local _SkinData = data.skin
-        local _Clothes = data.clothes
-        local wasHiddenLocally = false
-        if _Target == PlayerPedId() then
-            local model = GetPedModel(tonumber(_SkinData.sex))
-            LoadModel(PlayerPedId(), model)
-            _Target = PlayerPedId()
-            SetEntityAlpha(_Target, 0)
-            wasHiddenLocally = true
-            LoadedComponents = _SkinData
-        end
-        local ok, err = pcall(function()
-            FixIssues(_Target)
-            LoadHeight(_Target, _SkinData)
-            LoadBoody(_Target, _SkinData)
-            LoadHead(_Target, _SkinData)
-            LoadHair(_Target, _SkinData)
-            LoadBeard(_Target, _SkinData)
-            LoadEyes(_Target, _SkinData)
-            LoadFeatures(_Target, _SkinData)
-            LoadBodyFeature(_Target, _SkinData.body_size, Data.Appearance.body_size)
-            LoadBodyFeature(_Target, _SkinData.body_waist, Data.Appearance.body_waist)
-            LoadBodyFeature(_Target, _SkinData.chest_size, Data.Appearance.chest_size)
-            LoadOverlays(_Target, _SkinData)
-            SetAttributeCoreValue(_Target, 0, 100)
-            SetAttributeCoreValue(_Target, 1, 100)
-            SetEntityHealth(_Target, currentHealth, 0)
-            Citizen.InvokeNative(0x8899C244EBCF70DE, PlayerId(), 0.0)
-            Citizen.InvokeNative(0xDE1B1907A83A1550, _Target, 0)
-        end)
-        if not ok then
-            print(('[rsg-character] ApplySkin appearance apply failed: %s'):format(tostring(err)))
-            if wasHiddenLocally then
-                SetEntityAlpha(_Target, 255)
-            end
-            resolveOnce()
-            return
-        end
-        if _Target == PlayerPedId() then
-            TriggerEvent('rsg-character:client:ApplyClothes', _Clothes, _Target, _SkinData)
-        else
-            for i, m in pairs(Overlays.overlay_all_layers) do
-                Overlays.overlay_all_layers[i] =
-                { name = m.name, visibility = 0, tx_id = 1, tx_normal = 0, tx_material = 0, tx_color_type = 0, tx_opacity = 1.0, tx_unk = 0, palette = 0, palette_color_primary = 0, palette_color_secondary = 0, palette_color_tertiary = 0, var = 0, opacity = 0.0 }
-            end
-        end
-        SetAttributeBaseRank(_Target, 16, dirtClothes)
-        SetAttributeBaseRank(_Target, 17, dirtHat)
-        SetAttributeBaseRank(_Target, 22, dirtSkin)
-        resolveOnce()
-    end, citizenid)
-    Citizen.Await(promise)
+    if not ok then
+        print(('[rsg-character] ApplySkin appearance apply failed: %s'):format(tostring(err)))
+        SetEntityAlpha(ped, 255)
+        return
+    end
+
+    TriggerEvent('rsg-character:client:ApplyClothes', data.clothes, ped, skin)
+    SetAttributeBaseRank(ped, 16, dirtClothes)
+    SetAttributeBaseRank(ped, 17, dirtHat)
+    SetAttributeBaseRank(ped, 22, dirtSkin)
 end
 
 local function ApplySkinMultiChar(SkinData, Target, ClothesData)
@@ -308,20 +272,17 @@ end
 exports('ApplySkinMultiChar', ApplySkinMultiChar)
 
 RegisterNetEvent('rsg-character:client:OpenCreator', function(data, empty)
-    if data then
-        Cid = data.cid
-        PendingSelectedSex = data.selectedSex
-    elseif empty then
-        Skinkosong = true
-    end
+    Cid = data and data.cid or nil
+    PendingSelectedSex = data and data.selectedSex or nil
+    Skinkosong = (not data and empty) and true or false
 
     StartCreator()
 
 end)
 
-RegisterCommand('loadskin', function(source, args, raw)
-    if LocalPlayer.state.invincible then return end
-    LocalPlayer.state.invincible = true
+local loadingSkin = false
+RegisterCommand('loadskin', function()
+    if loadingSkin or IsInCharCreation or LocalPlayer.state.inClothingStore then return end
 
     local ped = PlayerPedId()
     local isdead = IsEntityDead(ped)
@@ -335,29 +296,25 @@ RegisterCommand('loadskin', function(source, args, raw)
     local isJailed = (playerData and playerData.metadata and playerData.metadata.injail) or 0
 
     if isdead or cuffed or hogtied or lassoed or dragged or ragdoll or falling or isJailed > 0 then
-        LocalPlayer.state.invincible = false
-        UI.notify({ title = locale('loadskin_blocked.title'), description = locale('loadskin_blocked.description'), type = 'error', duration = 5000 })
+        lib.notify({ title = locale('loadskin_blocked.title'), description = locale('loadskin_blocked.description'), type = 'error', duration = 5000 })
         return
     end
 
+    loadingSkin = true
     ApplySkin()
-
-    LocalPlayer.state.invincible = false
+    loadingSkin = false
 end, false)
 
 local function checkStrings(input)
-    if type(input) ~= 'string' then return false end
-    if RSG.ProfanityWords[input:lower()] then return false end
-    if #input < 2 or #input > 20 or not string.match(input, '^%u%l+$') then
-        UI.notify({ title = locale('invalid_character_name.title'), description = locale('invalid_character_name.description'), type = 'error', duration = 7000 })
+    if type(input) ~= 'string' or RSG.ProfanityWords[input:lower()]
+        or #input < 2 or #input > 20 or not input:match('^%u%l+$') then
+        lib.notify({ title = locale('invalid_character_name.title'), description = locale('invalid_character_name.description'), type = 'error', duration = 7000 })
         return false
     end
     return true
 end
 
 function StartCreator()
-    TriggerServerEvent('rsg-character:server:SetPlayerBucket' , BucketId)
-    Wait(1)
     for i, m in pairs(Overlays.overlay_all_layers) do
         Overlays.overlay_all_layers[i] =
         {name = m.name, visibility = 0, tx_id = 1, tx_normal = 0, tx_material = 0, tx_color_type = 0, tx_opacity = 1.0, tx_unk = 0, palette = 0, palette_color_primary = 0, palette_color_secondary = 0, palette_color_tertiary = 0, var = 0, opacity = 0.0}
@@ -589,7 +546,7 @@ function FirstMenu()
             end
             if data.current.value == 'save' then
                 if not AllRequiredFieldsFilled() then
-                    UI.notify({ title = locale('missing_character_info.title'), description = locale('missing_character_info.description'), type = 'error', duration = 7000 })
+                    lib.notify({ title = locale('missing_character_info.title'), description = locale('missing_character_info.description'), type = 'error', duration = 7000 })
                     return
                 end
 
@@ -597,8 +554,9 @@ function FirstMenu()
                 if Skinkosong then
                     UI.CloseAll()
                     Skinkosong = false
-                    Firstname = RSGCore.Functions.GetPlayerData().charinfo.firstname
-                    Lastname = RSGCore.Functions.GetPlayerData().charinfo.lastname
+                    local charinfo = RSGCore.Functions.GetPlayerData().charinfo or {}
+                    Firstname = charinfo.firstname or ''
+                    Lastname = charinfo.lastname or ''
                     FotoMugshots()
                 elseif Firstname and Lastname and Nationality and Selectedsex and Birthdate and Cid then
                     UI.CloseAll()
@@ -611,10 +569,9 @@ function FirstMenu()
                         cid = Cid
                     }
                     TriggerServerEvent('rsg-multicharacter:server:createCharacter', newData)
-                    Wait(500)
                     FotoMugshots()
                 else
-                    UI.notify({ title = locale('missing_character_info.title'), description = locale('missing_character_info.description'), type = 'error', duration = 7000 })
+                    lib.notify({ title = locale('missing_character_info.title'), description = locale('missing_character_info.description'), type = 'error', duration = 7000 })
                 end
             end
         end, function(data, menu)

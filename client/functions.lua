@@ -27,14 +27,8 @@ local Deputy
 local cameraMale
 local cameraFemale
 local isSelectSexActive
-local torso = 0
-local legs = 0
 local lightsOn = false
 
-ComponentsClothesMale = {}
-ComponentsClothesFemale = {}
-ComponentsBodyMale = {}
-ComponentsBodyFemale = {}
 ClothesCache = {}
 OldClothesCache = {}
 
@@ -244,8 +238,9 @@ function LoadModel(target, model)
     end
 
     RequestModel(model_)
-    while not HasModelLoaded(model_) do
-        Wait(1)
+    local deadline = GetGameTimer() + 10000
+    while not HasModelLoaded(model_) and GetGameTimer() < deadline do
+        Wait(10)
     end
 
     Citizen.InvokeNative(0xED40380076A31506, PlayerId(), model_, false)
@@ -255,7 +250,8 @@ end
 
 function LoadPlayer(model)
     RequestModel(model)
-    while not HasModelLoaded(model) do
+    local deadline = GetGameTimer() + 10000
+    while not HasModelLoaded(model) and GetGameTimer() < deadline do
         Wait(10)
     end
 end
@@ -477,19 +473,12 @@ CreatePedAtCoords = function(model, coords, isNetworked)
     end
 end
 
-local lastFrameTime = GetGameTimer()
-
 function StartPrompts()
     lightsOn = false
+    local label = CreateVarString(10, 'LITERAL_STRING', RSG.GroupPromptText)
     while IsInCharCreation do
         Wait(0)
-        local now = GetGameTimer()
-        local dt = math.min((now - lastFrameTime) / 16.667, 3.0)
-        lastFrameTime = now
-
         DrawLightWithRange(camloc.x, camloc.y, camloc.z, 255, 255, 255, 10.0, 100.0)
-
-        local label = CreateVarString(10, 'LITERAL_STRING', RSG.GroupPromptText)
         PromptSetActiveGroupThisFrame(RoomPrompts, label)
     end
 end
@@ -648,8 +637,7 @@ function EndCharacterCreatorCam(anim, anim1)
         Citizen.InvokeNative(0x84EEDB2C6E650000, anim)
         Citizen.InvokeNative(0x84EEDB2C6E650000, anim1)
     end
-    TriggerServerEvent('rsg-character:server:SetPlayerBucket' , 0)
-
+    -- the server resets the routing bucket once the skin is saved
     local clothesHashes = ConvertCacheToHash(ClothesCache)
     local skin = ConvertCacheToHash(CreatorCache)
 
@@ -701,8 +689,7 @@ function FotoMugshots()
     PromptSetVisible(CameraPrompt, 0)
     PromptSetVisible(RotatePrompt, 0)
     PromptSetVisible(ZoomPrompt, 0)
-    local FirstName = RSGCore.Functions.GetPlayerData().charinfo.firstname
-    local LastName = RSGCore.Functions.GetPlayerData().charinfo.lastname
+    local fullName = ('%s %s'):format(Firstname or '', Lastname or '')
     local animscenes = SetupScenes("Pl_Edit_to_Photo_" .. GetGender())
     StartAnimScene(animscenes)
     repeat Wait(0) until Citizen.InvokeNative(0xCBFC7725DE6CE2E0, animscenes)
@@ -725,7 +712,7 @@ function FotoMugshots()
     CreateThread(function()
         while IsInCharCreation do
             Wait(0)
-            DrawText3D(-558.64, -3782.30, 238.5, FirstName .. " " .. LastName, { 255, 255, 255, 255 })
+            DrawText3D(-558.64, -3782.30, 238.5, fullName, { 255, 255, 255, 255 })
         end
     end)
     ShowBusyspinnerWithText(locale('creator.photo_tip'))
@@ -782,31 +769,15 @@ function ShowBusyspinnerWithText(text)
     N_0x7f78cd75cc4539e4(CreateVarString(10, "LITERAL_STRING", text))
 end
 
-function GetHashHead(aMale,num,color)
-    color = color or 1
-    num = num or 1
-    if color == 1 then color = 1
-    elseif color == 2 then color = 4
-    elseif color == 3 then color = 3
-    elseif color == 4 then color = 5
-    elseif color == 5 then color = 2
-    elseif color == 6 then color = 6
-    end
-    if aMale then
-        if num == 16 then num = 18
-            elseif num == 17 then num = 21
-            elseif num == 18 then num = 22
-            elseif num == 19 then num = 25
-            elseif num == 20 then num = 28
-            end
-        else
-            if num == 17 then num = 20
-            elseif num == 18 then num = 22
-            elseif num == 19 then num = 27
-            elseif num == 20 then num = 28
-        end
-    end
-    local suffix = ("%03d"):format(num or 1)..'_V_'..("%03d"):format(color or 1)
+local HEAD_COLOR_MAP = { 1, 4, 3, 5, 2, 6 }
+local HEAD_NUM_MAP_MALE = { [16] = 18, [17] = 21, [18] = 22, [19] = 25, [20] = 28 }
+local HEAD_NUM_MAP_FEMALE = { [17] = 20, [18] = 22, [19] = 27, [20] = 28 }
+
+function GetHashHead(aMale, num, color)
+    color = HEAD_COLOR_MAP[tonumber(color) or 1] or 1
+    num = tonumber(num) or 1
+    num = (aMale and HEAD_NUM_MAP_MALE or HEAD_NUM_MAP_FEMALE)[num] or num
+    local suffix = ("%03d"):format(num)..'_V_'..("%03d"):format(color)
     local sex = (aMale == true) and "M" or "F"
     local hashname = ('CLOTHING_ITEM_%s_HEAD_%s'):format(sex,suffix)
     if HeadHashTable and HeadHashTable[hashname] then
@@ -835,92 +806,19 @@ function LoadBoody(target, data)
     NativeSetPedComponentEnabled(target, tonumber(legs), false, true, true)
 end
 
+-- [body size][skin tone] -> BODIES_UPPER/LOWER component index
+local SKIN_BODY_INDEX = {
+    { 7, 10, 9, 11, 8, 12 },
+    { 1, 4, 3, 5, 2, 6 },
+    { 13, 16, 15, 17, 14, 18 },
+    { 19, 22, 21, 23, 20, 24 },
+    { 25, 28, 27, 29, 26, 30 },
+    { 31, 34, 33, 35, 32, 36 },
+}
+
 function GetSkinColorFromBodySize(body, color)
-    if body == 1 then
-        if color == 1 then
-            return 7
-        elseif color == 2 then
-            return 10
-        elseif color == 3 then
-            return 9
-        elseif color == 4 then
-            return 11
-        elseif color == 5 then
-            return 8
-        elseif color == 6 then
-            return 12
-        end
-    elseif body == 2 then
-        if color == 1 then
-            return 1
-        elseif color == 2 then
-            return 4
-        elseif color == 3 then
-            return 3
-        elseif color == 4 then
-            return 5
-        elseif color == 5 then
-            return 2
-        elseif color == 6 then
-            return 6
-        end
-    elseif body == 3 then
-        if color == 1 then
-            return 13
-        elseif color == 2 then
-            return 16
-        elseif color == 3 then
-            return 15
-        elseif color == 4 then
-            return 17
-        elseif color == 5 then
-            return 14
-        elseif color == 6 then
-            return 18
-        end
-    elseif body == 4 then
-        if color == 1 then
-            return 19
-        elseif color == 2 then
-            return 22
-        elseif color == 3 then
-            return 21
-        elseif color == 4 then
-            return 23
-        elseif color == 5 then
-            return 20
-        elseif color == 6 then
-            return 24
-        end
-    elseif body == 5 then
-        if color == 1 then
-            return 25
-        elseif color == 2 then
-            return 28
-        elseif color == 3 then
-            return 27
-        elseif color == 4 then
-            return 29
-        elseif color == 5 then
-            return 26
-        elseif color == 6 then
-            return 30
-        end
-    elseif body == 6 then
-        if color == 1 then
-            return 31
-        elseif color == 2 then
-            return 34
-        elseif color == 3 then
-            return 33
-        elseif color == 4 then
-            return 35
-        elseif color == 5 then
-            return 32
-        elseif color == 6 then
-            return 36
-        end
-    end
+    local row = SKIN_BODY_INDEX[body]
+    return row and row[color]
 end
 
 function LoadHair(target, data)

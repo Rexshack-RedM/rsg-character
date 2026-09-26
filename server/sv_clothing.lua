@@ -1,108 +1,125 @@
-RegisterServerEvent('rsg-character:server:saveOutfit', function(newClothes, _clientIsMale, outfitName)
+RSGCore = RSGCore or exports['rsg-core']:GetCoreObject()
+
+local MAX_JSON_SIZE = 32768
+local MAX_OUTFITS = 30
+local cooldowns = {}
+
+local function Notify(src, title, description)
+    TriggerClientEvent('ox_lib:notify', src, { title = title, description = description, type = 'error', duration = 5000 })
+end
+
+local function OnCooldown(src, ms)
+    local now = GetGameTimer()
+    if cooldowns[src] and now - cooldowns[src] < ms then return true end
+    cooldowns[src] = now
+    return false
+end
+
+AddEventHandler('playerDropped', function()
+    cooldowns[source] = nil
+end)
+
+local function IsNearCloakroom(src)
+    local coords = GetEntityCoords(GetPlayerPed(src))
+    for _, v in ipairs(RSG.Cloakroom) do
+        if #(coords - v) <= 5.0 then return true end
+    end
+    return false
+end
+
+local function IsMale(Player)
+    return (tonumber(Player.PlayerData.charinfo and Player.PlayerData.charinfo.gender) or 0) == 0
+end
+
+RegisterNetEvent('rsg-character:server:saveOutfit', function(newClothes, _, outfitName)
     local src = source
+    if OnCooldown(src, 2000) then return end
     local Player = RSGCore.Functions.GetPlayer(src)
     if not Player then return end
+    if not RSG.IsNearClothingStore(src, 10.0) then return end
 
-    local isMale = (Player.PlayerData.charinfo?.gender or 0) == 0
-    local citizenid = Player.PlayerData.citizenid
-    local skinData = MySQL.query.await('SELECT clothes FROM playerskins WHERE citizenid = ?', { citizenid })
-
-    newClothes = newClothes or {}
-    local currentClothes = (skinData[1] and skinData[1].clothes and json.decode(skinData[1].clothes)) or {}
+    local isMale = IsMale(Player)
     local valid, reason = ValidateClothesData(newClothes, isMale)
     if not valid then
-        TriggerClientEvent('ox_lib:notify', src, { title = locale('clothing_validation.title'), description = reason, type = 'error', duration = 5000 })
+        Notify(src, locale('clothing_validation.title'), reason)
         return
     end
-    local price = CalculatePrice(newClothes, currentClothes, isMale)
 
-    if Player.Functions.RemoveMoney('cash', price, 'buy-clothes') then
-        MySQL.execute('UPDATE playerskins SET clothes = @clothes WHERE citizenid = @citizenid', {
-            ['@citizenid'] = citizenid,
-            ['@clothes'] = json.encode(newClothes),
-        })
-        if outfitName and type(outfitName) == 'string' and outfitName ~= '' then
-            outfitName = outfitName:sub(1, 40)
-            MySQL.query.await('INSERT INTO playeroutfit (citizenid, name, clothes) VALUES (@citizenid, @name, @clothes)', {
-                ['@citizenid'] = citizenid,
-                ['@name'] = outfitName,
-                ['@clothes'] = json.encode(newClothes),
-            })
-        end
+    local encoded = json.encode(newClothes)
+    if #encoded > MAX_JSON_SIZE then return end
 
-        local identityFields = RSG.WebhookIdentityFields(src)
-        RSG.SendWebhook('outfit_purchased', {
-            title = locale('webhooks.outfit_purchased.title'),
-            description = locale('webhooks.outfit_purchased.description', price),
-            fields = {
-                { name = locale('webhooks.outfit_purchased.field_citizenid'), value = citizenid, inline = true },
-                { name = locale('webhooks.outfit_purchased.field_outfit_name'), value = (outfitName and outfitName ~= '') and outfitName or locale('webhooks.common.na'), inline = true },
-                identityFields[1],
-                identityFields[2],
-            },
-        })
-    else
-        TriggerClientEvent('ox_lib:notify', src, { title = locale('insufficient_funds.title'), description = locale('insufficient_funds.description'), type = 'error', duration = 5000 })
-    end
-end)
-
-RegisterNetEvent('rsg-character:server:saveUseOutfit', function(clothes)
-    local src = source
-    local Player = RSGCore.Functions.GetPlayer(src)
-    if not Player then return end
-    if clothes ~= nil then
-        local citizenid = Player.PlayerData.citizenid
-        local isMale = (Player.PlayerData.charinfo?.gender or 0) == 0
-        local valid = ValidateClothesData(clothes, isMale)
-        if not valid then return end
-
-        local encoded = json.encode(clothes)
-        local owned = MySQL.scalar.await('SELECT 1 FROM playeroutfit WHERE citizenid = ? AND clothes = ?', { citizenid, encoded })
-        if not owned then
-            TriggerClientEvent('ox_lib:notify', src, { title = locale('clothing_validation.title'), description = locale('insufficient_funds.description'), type = 'error', duration = 5000 })
-            return
-        end
-
-        MySQL.execute('UPDATE playerskins SET clothes = @clothes WHERE citizenid = @citizenid', {
-            ['@citizenid'] = citizenid,
-            ['@clothes'] = encoded,
-        })
-    end
-end)
-
-RegisterServerEvent('rsg-character:server:DeleteOutfit')
-AddEventHandler('rsg-character:server:DeleteOutfit', function(name)
-    local src = source
-    local Player = RSGCore.Functions.GetPlayer(src)
-    if not Player or type(name) ~= 'string' then return end
     local citizenid = Player.PlayerData.citizenid
-    MySQL.Async.execute('DELETE FROM playeroutfit WHERE citizenid = ? AND name = ?', {citizenid, name})
+    local current = MySQL.scalar.await('SELECT clothes FROM playerskins WHERE citizenid = ? ORDER BY id DESC LIMIT 1', { citizenid })
+    local price = CalculatePrice(newClothes, current and json.decode(current) or {}, isMale)
+
+    if price > 0 and not Player.Functions.RemoveMoney('cash', price, 'rsg-character:buy-clothes') then
+        Notify(src, locale('insufficient_funds.title'), locale('insufficient_funds.description'))
+        return
+    end
+
+    MySQL.update('UPDATE playerskins SET clothes = ? WHERE citizenid = ?', { encoded, citizenid })
+
+    if type(outfitName) == 'string' then
+        outfitName = outfitName:gsub('^%s+', ''):gsub('%s+$', ''):sub(1, 40)
+        if outfitName ~= '' then
+            local count = MySQL.scalar.await('SELECT COUNT(*) FROM playeroutfit WHERE citizenid = ?', { citizenid }) or 0
+            if count < MAX_OUTFITS then
+                MySQL.insert('INSERT INTO playeroutfit (citizenid, name, clothes) VALUES (?, ?, ?)', { citizenid, outfitName, encoded })
+            else
+                Notify(src, locale('clothing_validation.title'), locale('outfit_limit_reached', MAX_OUTFITS))
+            end
+        end
+    end
+
+    local identityFields = RSG.WebhookIdentityFields(src)
+    RSG.SendWebhook('outfit_purchased', {
+        title = locale('webhooks.outfit_purchased.title'),
+        description = locale('webhooks.outfit_purchased.description', price),
+        fields = {
+            { name = locale('webhooks.outfit_purchased.field_citizenid'), value = citizenid, inline = true },
+            { name = locale('webhooks.outfit_purchased.field_outfit_name'), value = (type(outfitName) == 'string' and outfitName ~= '') and outfitName or locale('webhooks.common.na'), inline = true },
+            identityFields[1],
+            identityFields[2],
+        },
+    })
 end)
 
-lib.callback.register('rsg-character:server:LoadClothes', function(source)
-    local Player = RSGCore.Functions.GetPlayer(source)
-    if not Player then return {} end
+-- Wear a saved outfit by id; returns the clothes to apply or nil.
+lib.callback.register('rsg-character:server:wearOutfit', function(src, id)
+    id = tonumber(id)
+    if not id or OnCooldown(src, 1000) then return nil end
+    local Player = RSGCore.Functions.GetPlayer(src)
+    if not Player or not IsNearCloakroom(src) then return nil end
+
     local citizenid = Player.PlayerData.citizenid
-    local clothes = {}
-    local Result = MySQL.query.await('SELECT clothes FROM playerskins WHERE citizenid = ?', { citizenid })
+    local clothes = MySQL.scalar.await('SELECT clothes FROM playeroutfit WHERE id = ? AND citizenid = ?', { id, citizenid })
+    if not clothes then return nil end
 
-    if Result[1] ~= nil and Result[1].clothes ~= nil then
-        clothes = json.decode(Result[1].clothes)
-    end
-
-    return clothes
+    MySQL.update('UPDATE playerskins SET clothes = ? WHERE citizenid = ?', { clothes, citizenid })
+    return json.decode(clothes)
 end)
 
-lib.callback.register('rsg-character:server:getOutfits', function(source)
-    local Player = RSGCore.Functions.GetPlayer(source)
+RegisterNetEvent('rsg-character:server:DeleteOutfit', function(id)
+    local src = source
+    id = tonumber(id)
+    local Player = RSGCore.Functions.GetPlayer(src)
+    if not Player or not id then return end
+    MySQL.update('DELETE FROM playeroutfit WHERE id = ? AND citizenid = ?', { id, Player.PlayerData.citizenid })
+end)
+
+lib.callback.register('rsg-character:server:LoadClothes', function(src)
+    local Player = RSGCore.Functions.GetPlayer(src)
     if not Player then return {} end
-    local outfit = {}
-    local Result = MySQL.query.await('SELECT * FROM playeroutfit WHERE citizenid=@citizenid', {['@citizenid'] = Player.PlayerData.citizenid})
+    local clothes = MySQL.scalar.await('SELECT clothes FROM playerskins WHERE citizenid = ? ORDER BY id DESC LIMIT 1', { Player.PlayerData.citizenid })
+    return clothes and json.decode(clothes) or {}
+end)
 
-    for i = 1, #Result do
-        Result[i].clothes = json.decode(Result[i].clothes)
-        outfit[#outfit+1] = Result[i]
+lib.callback.register('rsg-character:server:getOutfits', function(src)
+    local Player = RSGCore.Functions.GetPlayer(src)
+    if not Player then return {} end
+    local rows = MySQL.query.await('SELECT id, name, clothes FROM playeroutfit WHERE citizenid = ? ORDER BY id', { Player.PlayerData.citizenid }) or {}
+    for i = 1, #rows do
+        rows[i].clothes = json.decode(rows[i].clothes)
     end
-
-    return outfit
+    return rows
 end)

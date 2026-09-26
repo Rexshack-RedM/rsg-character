@@ -351,13 +351,7 @@
         },
         "total": "合計",
         "cancel": "キャンセル",
-        "confirm": "確認",
-        "notify_types": {
-            "info": "情報",
-            "success": "成功",
-            "warning": "警告",
-            "error": "エラー"
-        }
+        "confirm": "確認"
     },
     "clothing_validation": {
         "title": "エラー",
@@ -393,7 +387,6 @@
             "description": "**%s %s**（市民ID **%s**）が削除されました。"
         },
         "appearance_saved": {
-            "title_update": "外見更新",
             "title_initial": "初期外見を保存",
             "description": "市民ID **%s** の外見/服装を保存しました。",
             "field_citizenid": "市民ID"
@@ -433,5 +426,7 @@
         "cuban": "キューバ人",
         "native_american": "アメリカ先住民",
         "other": "その他"
-    }
+    },
+    "outfit_limit_reached": "You can only store %s outfits - this one was not saved to your wardrobe",
+    "outfit_delete_confirm": "Delete this outfit?"
 }

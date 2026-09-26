@@ -351,13 +351,7 @@
         },
         "total": "TOTAL",
         "cancel": "Anulează",
-        "confirm": "Confirmă",
-        "notify_types": {
-            "info": "INFO",
-            "success": "SUCCES",
-            "warning": "AVERTISMENT",
-            "error": "EROARE"
-        }
+        "confirm": "Confirmă"
     },
     "clothing_validation": {
         "title": "Eroare",
@@ -393,7 +387,6 @@
             "description": "**%s %s** (ID cetățean **%s**) a fost șters."
         },
         "appearance_saved": {
-            "title_update": "Aspect actualizat",
             "title_initial": "Aspect inițial salvat",
             "description": "Aspectul/hainele au fost salvate pentru ID-ul de cetățean **%s**.",
             "field_citizenid": "ID cetățean"
@@ -433,5 +426,7 @@
         "cuban": "Cubanez",
         "native_american": "Nativ american",
         "other": "Altul"
-    }
+    },
+    "outfit_limit_reached": "You can only store %s outfits - this one was not saved to your wardrobe",
+    "outfit_delete_confirm": "Delete this outfit?"
 }

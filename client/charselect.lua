@@ -548,7 +548,7 @@ end)
 RegisterNetEvent('rsg-character:client:CharSelectFailed', function()
     pendingDeleteLoading = false
     UI.HideLoadingScreen()
-    UI.notify({
+    lib.notify({
         title = locale('charselect.login_failed.title'),
         description = locale('charselect.login_failed.description'),
         type = 'error',

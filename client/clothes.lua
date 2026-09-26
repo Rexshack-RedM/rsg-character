@@ -2,7 +2,6 @@ local RSGCore = exports['rsg-core']:GetCoreObject()
 local ClothingCamera = nil
 local c_zoom = 2.4
 local c_offset = -0.15
-local Outfits_tab = {}
 local clothing = require 'data.clothing'
 
 local BODY_CATEGORY_MAP = {
@@ -180,85 +179,32 @@ end
 function OpenCateogry(menu_catagory)
     UI.CloseAll()
     local elements = {}
-    if IsPedMale(PlayerPedId()) then
-        local a = 1
-        for v, k in pairsByKeys(RSG.MenuElements[menu_catagory].category) do
-            if clothing["male"][k] ~= nil then
-                local category = clothing["male"][k]
-                if ClothesCache[k] == nil or type(ClothesCache[k]) ~= "table" then
-                    ClothesCache[k] = {}
-                    ClothesCache[k].model = 0
-                    ClothesCache[k].texture = 1
-                end
-                elements[#elements + 1] = {
-                    label = (RSG.Label[k] and (RSG.Price[k] .. "$ " .. RSG.Label[k])) or (RSG.Price[k] .. "$ " .. v),
-                    value = ClothesCache[k].model or 0,
-                    category = k,
-                    group = k,
-                    showCount = true,
-                    desc = "",
-                    type = "slider",
-                    min = 0,
-                    max = #category,
-                    change_type = "model",
-                    id = a
-                }
-                a = a + 1
-                elements[#elements + 1] = {
-                    label = (RSG.Label[k] and (RSG.Label.color .. RSG.Label[k])) or (RSG.Label.color .. v),
-                    value = ClothesCache[k].texture or 1,
-                    category = k,
-                    group = k,
-                    showCount = true,
-                    desc = "",
-                    type = "slider",
-                    min = 1,
-                    max = GetMaxTexturesForModel(k, ClothesCache[k].model or 1, true),
-                    change_type = "texture",
-                    id = a
-                }
-                a = a + 1
+    local gender = IsPedMale(PlayerPedId()) and "male" or "female"
+    local a = 1
+    for v, k in pairsByKeys(RSG.MenuElements[menu_catagory].category) do
+        local category = clothing[gender][k]
+        if category then
+            if type(ClothesCache[k]) ~= "table" then
+                ClothesCache[k] = { model = 0, texture = 1 }
             end
-        end
-    else
-        local a = 1
-        for v, k in pairsByKeys(RSG.MenuElements[menu_catagory].category) do
-            if clothing["female"][k] ~= nil then
-                local category = clothing["female"][k]
-                if ClothesCache[k] == nil or type(ClothesCache[k]) ~= "table" then
-                    ClothesCache[k] = {}
-                    ClothesCache[k].model = 0
-                    ClothesCache[k].texture = 0
-                end
-                elements[#elements + 1] = {
-                    label = (RSG.Label[k] and (RSG.Price[k] .. "$ " .. RSG.Label[k])) or (RSG.Price[k] .. "$ " .. v),
-                    value = ClothesCache[k].model or 0,
-                    category = k,
-                    group = k,
-                    showCount = true,
-                    desc = "",
-                    type = "slider",
-                    min = 0,
-                    max = #category,
-                    change_type = "model",
-                    id = a
-                }
-                a = a + 1
-                elements[#elements + 1] = {
-                    label = (RSG.Label[k] and (RSG.Label.color .. RSG.Label[k])) or (RSG.Label.color .. v),
-                    value = ClothesCache[k].texture or 1,
-                    category = k,
-                    group = k,
-                    showCount = true,
-                    desc = "",
-                    type = "slider",
-                    min = 1,
-                    max = GetMaxTexturesForModel(k, ClothesCache[k].model or 1, true),
-                    change_type = "texture",
-                    id = a
-                }
-                a = a + 1
-            end
+            local name = RSG.Label[k] or v
+            local price = RSG.Price[k] or 0
+            elements[#elements + 1] = {
+                label = price .. "$ " .. name,
+                value = ClothesCache[k].model or 0,
+                category = k, group = k, showCount = true, desc = "",
+                type = "slider", min = 0, max = #category,
+                change_type = "model", id = a,
+            }
+            a = a + 1
+            elements[#elements + 1] = {
+                label = RSG.Label.color .. name,
+                value = ClothesCache[k].texture or 1,
+                category = k, group = k, showCount = true, desc = "",
+                type = "slider", min = 1, max = GetMaxTexturesForModel(k, ClothesCache[k].model or 1, true),
+                change_type = "texture", id = a,
+            }
+            a = a + 1
         end
     end
     UI.Open('default', GetCurrentResourceName(), 'clothing_store_menu_category',
@@ -317,40 +263,26 @@ function MenuUpdateClothes(data, menu)
     end
 end
 
-local clothingLastFrame = GetGameTimer()
-
 function ClothingLight()
     while ClothingCamera do
         Wait(0)
-        local now = GetGameTimer()
-        local dt = math.min((now - clothingLastFrame) / 16.667, 3.0)
-        clothingLastFrame = now
-
         TogglePrompts({}, true)
     end
 end
 
 function Change(id, category, change_type)
-    if IsPedMale(PlayerPedId()) then
-        if change_type == "model" then
-            NativeSetPedComponentEnabledClothes(PlayerPedId(), clothing["male"][category][id][1].hash, false, true, true)
-        else
-            local hash = clothing["male"][category][ClothesCache[category].model]
-
-            if not hash then return end
-
-            NativeSetPedComponentEnabledClothes(PlayerPedId(), clothing["male"][category][ClothesCache[category].model][id].hash, false, true, true)
-        end
+    local gender = IsPedMale(PlayerPedId()) and "male" or "female"
+    local cat = clothing[gender][category]
+    if not cat then return end
+    local entry
+    if change_type == "model" then
+        entry = cat[id] and cat[id][1]
     else
-        if change_type == "model" then
-            NativeSetPedComponentEnabledClothes(PlayerPedId(), clothing["female"][category][id][1].hash, false, true, true)
-        else
-            local hash = clothing["female"][category][ClothesCache[category].model]
-
-            if not hash then return end
-
-            NativeSetPedComponentEnabledClothes(PlayerPedId(), clothing["female"][category][ClothesCache[category].model][id].hash, false, true, true)
-        end
+        local model = cat[ClothesCache[category].model]
+        entry = model and model[id]
+    end
+    if entry then
+        NativeSetPedComponentEnabledClothes(PlayerPedId(), entry.hash, false, true, true)
     end
 end
 
@@ -382,22 +314,10 @@ AddEventHandler('rsg-character:client:ApplyClothes', function(ClothesComponents,
                     else
                         local id = tonumber(v.model)
                         if id and id >= 1 then
-                            if IsPedMale(_Target) then
-                                if clothing["male"][k] ~= nil then
-                                    if clothing["male"][k][tonumber(v.model)] ~= nil then
-                                        if clothing["male"][k][tonumber(v.model)][tonumber(v.texture)] ~= nil then
-                                            NativeSetPedComponentEnabledClothes(_Target, tonumber(clothing["male"][k][tonumber(v.model)][tonumber(v.texture)].hash), false, true, true)
-                                        end
-                                    end
-                                end
-                            else
-                                if clothing["female"][k] ~= nil then
-                                    if clothing["female"][k][tonumber(v.model)] ~= nil then
-                                        if clothing["female"][k][tonumber(v.model)][tonumber(v.texture)] ~= nil then
-                                            NativeSetPedComponentEnabledClothes(_Target, tonumber(clothing["female"][k][tonumber(v.model)][tonumber(v.texture)].hash), false, true, true)
-                                        end
-                                    end
-                                end
+                            local cat = clothing[IsPedMale(_Target) and "male" or "female"][k]
+                            local entry = cat and cat[id] and cat[id][tonumber(v.texture)]
+                            if entry then
+                                NativeSetPedComponentEnabledClothes(_Target, tonumber(entry.hash), false, true, true)
                             end
                         end
                     end
@@ -571,50 +491,50 @@ end
 
 function Outfits()
     UI.CloseAll()
-    local Result = lib.callback.await('rsg-character:server:getOutfits', false)
-    local elements_outfits = {}
-    for k, v in pairs(Result) do
-        elements_outfits[#elements_outfits + 1] = {
-            name = v.name,
-            label = '#' .. k .. '. ' .. EscapeHtml(v.name),
-            value = v.clothes,
-            desc = RSG.Label.choose
+    local result = lib.callback.await('rsg-character:server:getOutfits', false) or {}
+    local elements = {}
+    for i, v in ipairs(result) do
+        elements[#elements + 1] = {
+            label = '#' .. i .. '. ' .. EscapeHtml(v.name),
+            value = v.id,
+            desc = RSG.Label.choose,
         }
     end
     UI.Open('default', GetCurrentResourceName(), 'outfits_menu',
-        {title = RSG.Label.clothes, subtext = RSG.Label.choose, align = 'top-left', elements = elements_outfits, itemHeight = "4vh"},
-        function(data, menu)
-            OutfitsManage(data.current.value, data.current.name)
-        end, function(data, menu)
+        {title = RSG.Label.clothes, subtext = RSG.Label.choose, align = 'top-left', elements = elements, itemHeight = "4vh"},
+        function(data)
+            OutfitsManage(data.current.value)
+        end, function(_, menu)
             menu.close()
         end)
 end
 
-function OutfitsManage(outfit, id)
+function OutfitsManage(outfitId)
     UI.CloseAll()
-    local elements_outfits_manage = {
+    local elements = {
         {label = RSG.Label.wear, value = "SetOutfits", desc = RSG.Label.wear_desc},
-        {label = RSG.Label.delete, value = "DeleteOutfit", desc = RSG.Label.delete_desc}
+        {label = RSG.Label.delete, value = "DeleteOutfit", desc = RSG.Label.delete_desc, danger = true}
     }
     UI.Open('default', GetCurrentResourceName(), 'outfits_menu_manage',
-        {title = RSG.Label.clothes, subtext = RSG.Label.options, align = 'top-left', elements = elements_outfits_manage, itemHeight = "4vh"}, function(data, menu)
-            menu.close()
+        {title = RSG.Label.clothes, subtext = RSG.Label.options, align = 'top-left', elements = elements, itemHeight = "4vh"}, function(data, menu)
+        menu.close()
         if data.current.value == 'SetOutfits' then
-            TriggerEvent('rsg-character:client:ApplyClothes', outfit, PlayerPedId())
-            local ClothesHash = ConvertCacheToHash(outfit)
-            TriggerServerEvent('rsg-character:server:saveUseOutfit', ClothesHash)
+            local clothes = lib.callback.await('rsg-character:server:wearOutfit', false, outfitId)
+            if clothes then
+                TriggerEvent('rsg-character:client:ApplyClothes', clothes, PlayerPedId())
+            end
+        elseif data.current.value == 'DeleteOutfit' then
+            local alert = UI.alertDialog({ header = locale('outfit_delete_confirm'), cancel = true })
+            if alert == 'confirm' then
+                TriggerServerEvent('rsg-character:server:DeleteOutfit', outfitId)
+                Wait(250)
+            end
+            Outfits()
         end
-        if data.current.value == 'DeleteOutfit' then
-            return TriggerServerEvent('rsg-character:server:DeleteOutfit', id)
-        end
-    end, function(data, menu)
+    end, function()
         Outfits()
     end)
 end
-
-exports('GetClothesComponents', function()
-    return {ComponentsClothesMale, ComponentsClothesFemale}
-end)
 
 exports('GetClothesCache', function(name)
     return ClothesCache

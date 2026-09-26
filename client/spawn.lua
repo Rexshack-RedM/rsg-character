@@ -5,7 +5,7 @@ end)
 local OpenSpawnMenu
 
 
-local function TeleportToSpawn(coords, heading, isNewCharacter)
+local function TeleportToSpawn(coords, heading, fromMenu)
     local ped = PlayerPedId()
 
     DoScreenFadeOut(500)
@@ -15,42 +15,68 @@ local function TeleportToSpawn(coords, heading, isNewCharacter)
     end
 
     SetEntityCoords(ped, coords.x, coords.y, coords.z, false, false, false, false)
+    FreezeEntityPosition(ped, true)
 
-    RequestCollisionAtCoord(coords.x, coords.y, coords.z)
-    local collisionTimeout = GetGameTimer() + 3000
-    local collisionLoaded = false
-    while GetGameTimer() < collisionTimeout do
-        if HasCollisionLoadedAroundEntity(ped) then
-            collisionLoaded = true
-            break
+    -- interiors are not streamed by collision requests alone: pin the interior and wait until it is ready
+    local interior = 0
+    if not fromMenu then
+        interior = GetInteriorAtCoords(coords.x, coords.y, coords.z)
+        if interior ~= 0 and IsValidInterior(interior) then
+            PinInteriorInMemory(interior)
+            local interiorTimeout = GetGameTimer() + 10000
+            while not IsInteriorReady(interior) and GetGameTimer() < interiorTimeout do
+                RequestCollisionAtCoord(coords.x, coords.y, coords.z)
+                Wait(50)
+            end
+            if RSG.Debug then print(('[rsg-character] interior %s ready=%s'):format(interior, tostring(IsInteriorReady(interior)))) end
+        else
+            interior = 0
         end
-        Wait(0)
     end
 
-    if not collisionLoaded and isNewCharacter == false then
-        DoScreenFadeIn(500)
-        OpenSpawnMenu()
-        return
+    -- saved logout positions get a longer wait: interiors stream in slower than open world
+    RequestCollisionAtCoord(coords.x, coords.y, coords.z)
+    local collisionTimeout = GetGameTimer() + (fromMenu and 3000 or 10000)
+    while GetGameTimer() < collisionTimeout do
+        if HasCollisionLoadedAroundEntity(ped) then break end
+        RequestCollisionAtCoord(coords.x, coords.y, coords.z)
+        Wait(50)
     end
 
-    local groundZ = GetGroundedZ(coords.x, coords.y, coords.z)
-
-    SetEntityCoords(ped, coords.x, coords.y, groundZ, false, false, false, false)
+    if fromMenu then
+        -- preset spawns are outdoors, snap to ground
+        local groundZ = GetGroundedZ(coords.x, coords.y, coords.z)
+        SetEntityCoords(ped, coords.x, coords.y, groundZ, false, false, false, false)
+    else
+        -- saved position: use the exact saved z; a ground probe from above would land on the roof / upper floor
+        SetEntityCoords(ped, coords.x, coords.y, coords.z - 1.0, false, false, false, false)
+    end
     SetEntityHeading(ped, heading or 0.0)
 
-    FreezeEntityPosition(ped, false)
     SetEntityVisible(ped, true, false)
     Citizen.InvokeNative(0x4D51E59243281D80, PlayerId(), true, 0, false)
     DisplayHud(true)
     DisplayRadar(true)
 
-    if isNewCharacter then
-        ExecuteCommand('revive')
+    -- give streaming a moment behind the loading screen before revealing the world
+    local streamDeadline = GetGameTimer() + 5000
+    while not HasCollisionLoadedAroundEntity(ped) and GetGameTimer() < streamDeadline do
+        Wait(100)
+    end
+    Wait(1500)
+
+    if interior ~= 0 then
+        -- re-place the ped now the interior exists so the engine assigns it to the correct room (fixes invisible/stuck ped)
+        SetEntityCoords(ped, coords.x, coords.y, coords.z - 1.0, false, false, false, false)
+        SetEntityHeading(ped, heading or 0.0)
+        Wait(100)
+        UnpinInterior(interior)
     end
 
-    Wait(10000)
-
-    if UI and UI.HideLoadingScreen then UI.HideLoadingScreen() end
+    SetEntityCollision(ped, true, true)
+    SetEntityVisible(ped, true, false)
+    FreezeEntityPosition(ped, false)
+    UI.HideLoadingScreen()
     DoScreenFadeIn(1000)
     TriggerServerEvent('RSGCore:Server:OnPlayerLoaded')
     TriggerEvent('RSGCore:Client:OnPlayerLoaded')
@@ -73,6 +99,8 @@ local function BuildSpawnElements()
 end
 
 OpenSpawnMenu = function()
+    -- loading screen (z-index 50) sits above the spawn panel (z-index 20); hide it or the menu is invisible
+    UI.HideLoadingScreen()
     local value = UI.OpenSpawnSelect({
         title = locale('spawn.title'),
         subtitle = locale('spawn.subtitle'),

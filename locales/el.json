@@ -351,13 +351,7 @@
         },
         "total": "ΣΥΝΟΛΟ",
         "cancel": "Ακύρωση",
-        "confirm": "Επιβεβαίωση",
-        "notify_types": {
-            "info": "ΠΛΗΡΟΦΟΡΙΑ",
-            "success": "ΕΠΙΤΥΧΙΑ",
-            "warning": "ΠΡΟΕΙΔΟΠΟΙΗΣΗ",
-            "error": "ΣΦΑΛΜΑ"
-        }
+        "confirm": "Επιβεβαίωση"
     },
     "clothing_validation": {
         "title": "Σφάλμα",
@@ -393,7 +387,6 @@
             "description": "Ο/Η **%s %s** (ID πολίτη **%s**) διαγράφηκε."
         },
         "appearance_saved": {
-            "title_update": "Ενημερώθηκε η εμφάνιση",
             "title_initial": "Αποθηκεύτηκε η αρχική εμφάνιση",
             "description": "Η εμφάνιση/τα ρούχα αποθηκεύτηκαν για το ID πολίτη **%s**.",
             "field_citizenid": "ID πολίτη"
@@ -433,5 +426,7 @@
         "cuban": "Κουβανός",
         "native_american": "Ιθαγενής Αμερικανός",
         "other": "Άλλο"
-    }
+    },
+    "outfit_limit_reached": "You can only store %s outfits - this one was not saved to your wardrobe",
+    "outfit_delete_confirm": "Delete this outfit?"
 }
