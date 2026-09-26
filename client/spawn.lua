@@ -1,6 +1,20 @@
+-- The server sends ApplySkin and OpenSpawnSelect back to back. Applying the skin swaps the
+-- player model (new ped handle), so the spawn flow must wait for it or it ends up making the
+-- old, deleted ped visible and the player stays invisible.
+local skinApplying = false
 RegisterNetEvent('rsg-character:client:ApplySkin', function(skin, clothes)
-    exports[GetCurrentResourceName()]:ApplySkinMultiChar(skin, PlayerPedId(), clothes)
+    skinApplying = true
+    local ok, err = pcall(function()
+        exports[GetCurrentResourceName()]:ApplySkinMultiChar(skin or {}, PlayerPedId(), clothes or {})
+    end)
+    if not ok then print(('[rsg-character] ApplySkin failed: %s'):format(tostring(err))) end
+    skinApplying = false
 end)
+
+local function WaitForSkin()
+    local deadline = GetGameTimer() + 15000
+    while skinApplying and GetGameTimer() < deadline do Wait(50) end
+end
 
 local OpenSpawnMenu
 
@@ -73,8 +87,10 @@ local function TeleportToSpawn(coords, heading, fromMenu)
         UnpinInterior(interior)
     end
 
+    ped = PlayerPedId() -- re-fetch: the model may have been swapped while we waited
     SetEntityCollision(ped, true, true)
     SetEntityVisible(ped, true, false)
+    ResetEntityAlpha(ped)
     FreezeEntityPosition(ped, false)
     UI.HideLoadingScreen()
     DoScreenFadeIn(1000)
@@ -116,6 +132,7 @@ OpenSpawnMenu = function()
 end
 
 RegisterNetEvent('rsg-character:client:OpenSpawnSelect', function(lastPos)
+    WaitForSkin()
     local ped = PlayerPedId()
     FreezeEntityPosition(ped, true)
     SetEntityVisible(ped, false, false)

@@ -123,6 +123,13 @@ RegisterNetEvent('rsg-character:server:SaveSkin', function(skin, clothes)
     })
 end)
 
+local function SafeDecode(value, fallback)
+    if type(value) ~= 'string' or value == '' then return fallback end
+    local ok, decoded = pcall(json.decode, value)
+    if ok and type(decoded) == 'table' then return decoded end
+    return fallback
+end
+
 local function GetSkinRow(citizenid)
     return MySQL.single.await('SELECT skin, clothes FROM playerskins WHERE citizenid = ? ORDER BY id DESC LIMIT 1', { citizenid })
 end
@@ -132,8 +139,10 @@ function RSG.LoadSkinForSource(src)
     local Player = RSGCore.Functions.GetPlayer(src)
     if not Player then return false end
     local row = GetSkinRow(Player.PlayerData.citizenid)
-    if row then
-        TriggerClientEvent('rsg-character:client:ApplySkin', src, json.decode(row.skin), json.decode(row.clothes))
+    local skin = row and SafeDecode(row.skin)
+    if skin then
+        -- legacy rows (rsg-appearance) can have NULL/empty clothes: fall back to an empty table
+        TriggerClientEvent('rsg-character:client:ApplySkin', src, skin, SafeDecode(row.clothes, {}))
         return true
     end
     RSG.OpenCreatorFor(src, nil)
@@ -148,8 +157,9 @@ local function GetAppearance(src)
     local Player = RSGCore.Functions.GetPlayer(src)
     if not Player then return nil end
     local row = GetSkinRow(Player.PlayerData.citizenid)
-    if not row then return nil end
-    return { skin = json.decode(row.skin), clothes = json.decode(row.clothes) }
+    local skin = row and SafeDecode(row.skin)
+    if not skin then return nil end
+    return { skin = skin, clothes = SafeDecode(row.clothes, {}) }
 end
 
 lib.callback.register('rsg-character:server:getAppearance', GetAppearance)
