@@ -578,7 +578,6 @@ end
 CreateThread(function()
     OpenCloakroom()
     while true do
-        Wait(100)
         local sleep = true
         local playerPed = PlayerPedId()
         local coords = GetEntityCoords(playerPed)
@@ -594,9 +593,7 @@ CreateThread(function()
                 end
             end
         end
-        if sleep then
-            Wait(1500)
-        end
+        Wait(sleep and 1000 or 0)
     end
 end)
 
