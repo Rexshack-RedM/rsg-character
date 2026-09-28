@@ -59,16 +59,20 @@ RegisterNetEvent('rsg-character:server:saveOutfit', function(newClothes, _, outf
 
     MySQL.update('UPDATE playerskins SET clothes = ? WHERE citizenid = ?', { encoded, citizenid })
 
+    -- every purchase is saved to the wardrobe; a blank/cancelled name gets an automatic one
+    local count = MySQL.scalar.await('SELECT COUNT(*) FROM playeroutfit WHERE citizenid = ? AND is_default = 0', { citizenid }) or 0
     if type(outfitName) == 'string' then
         outfitName = outfitName:gsub('^%s+', ''):gsub('%s+$', ''):sub(1, 40)
-        if outfitName ~= '' then
-            local count = MySQL.scalar.await('SELECT COUNT(*) FROM playeroutfit WHERE citizenid = ?', { citizenid }) or 0
-            if count < MAX_OUTFITS then
-                MySQL.insert('INSERT INTO playeroutfit (citizenid, name, clothes) VALUES (?, ?, ?)', { citizenid, outfitName, encoded })
-            else
-                Notify(src, locale('clothing_validation.title'), locale('outfit_limit_reached', MAX_OUTFITS))
-            end
-        end
+    else
+        outfitName = ''
+    end
+    if outfitName == '' then
+        outfitName = locale('auto_outfit_name', count + 1)
+    end
+    if count < MAX_OUTFITS then
+        MySQL.insert('INSERT INTO playeroutfit (citizenid, name, clothes, is_default) VALUES (?, ?, ?, 0)', { citizenid, outfitName, encoded })
+    else
+        Notify(src, locale('clothing_validation.title'), locale('outfit_limit_reached', MAX_OUTFITS))
     end
 
     local identityFields = RSG.WebhookIdentityFields(src)
@@ -77,7 +81,7 @@ RegisterNetEvent('rsg-character:server:saveOutfit', function(newClothes, _, outf
         description = locale('webhooks.outfit_purchased.description', price),
         fields = {
             { name = locale('webhooks.outfit_purchased.field_citizenid'), value = citizenid, inline = true },
-            { name = locale('webhooks.outfit_purchased.field_outfit_name'), value = (type(outfitName) == 'string' and outfitName ~= '') and outfitName or locale('webhooks.common.na'), inline = true },
+            { name = locale('webhooks.outfit_purchased.field_outfit_name'), value = outfitName, inline = true },
             identityFields[1],
             identityFields[2],
         },
@@ -104,7 +108,8 @@ RegisterNetEvent('rsg-character:server:DeleteOutfit', function(id)
     id = tonumber(id)
     local Player = RSGCore.Functions.GetPlayer(src)
     if not Player or not id then return end
-    MySQL.update('DELETE FROM playeroutfit WHERE id = ? AND citizenid = ?', { id, Player.PlayerData.citizenid })
+    -- the Default outfit from character creation can never be deleted
+    MySQL.update('DELETE FROM playeroutfit WHERE id = ? AND citizenid = ? AND is_default = 0', { id, Player.PlayerData.citizenid })
 end)
 
 lib.callback.register('rsg-character:server:LoadClothes', function(src)
@@ -117,9 +122,25 @@ end)
 lib.callback.register('rsg-character:server:getOutfits', function(src)
     local Player = RSGCore.Functions.GetPlayer(src)
     if not Player then return {} end
-    local rows = MySQL.query.await('SELECT id, name, clothes FROM playeroutfit WHERE citizenid = ? ORDER BY id', { Player.PlayerData.citizenid }) or {}
+    local rows = MySQL.query.await('SELECT id, name, clothes, is_default FROM playeroutfit WHERE citizenid = ? ORDER BY is_default DESC, id', { Player.PlayerData.citizenid }) or {}
     for i = 1, #rows do
         rows[i].clothes = json.decode(rows[i].clothes)
+        rows[i].is_default = rows[i].is_default == 1 or rows[i].is_default == true
     end
     return rows
+end)
+
+-- Schema migration + backfill: adds is_default and gives existing characters a Default outfit
+-- copied from what they are currently wearing. Safe to run on every start.
+MySQL.ready(function()
+    MySQL.query.await('ALTER TABLE playeroutfit ADD COLUMN IF NOT EXISTS is_default TINYINT(1) NOT NULL DEFAULT 0')
+    local added = MySQL.update.await([[
+        INSERT INTO playeroutfit (citizenid, name, clothes, is_default)
+        SELECT s.citizenid, ?, s.clothes, 1 FROM playerskins s
+        WHERE s.clothes IS NOT NULL AND s.clothes <> '' AND s.clothes <> '[]' AND s.clothes <> '{}'
+          AND NOT EXISTS (SELECT 1 FROM playeroutfit o WHERE o.citizenid = s.citizenid AND o.is_default = 1)
+    ]], { locale('default_outfit_name') })
+    if added and added > 0 then
+        print(('[rsg-character] created Default outfits for %s existing characters'):format(added))
+    end
 end)

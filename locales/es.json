@@ -428,5 +428,7 @@
         "other": "Otro"
     },
     "outfit_limit_reached": "You can only store %s outfits - this one was not saved to your wardrobe",
-    "outfit_delete_confirm": "Delete this outfit?"
+    "outfit_delete_confirm": "Delete this outfit?",
+    "default_outfit_name": "Default",
+    "auto_outfit_name": "Outfit %s"
 }

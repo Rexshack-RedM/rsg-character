@@ -495,26 +495,29 @@ function Outfits()
     local elements = {}
     for i, v in ipairs(result) do
         elements[#elements + 1] = {
-            label = '#' .. i .. '. ' .. EscapeHtml(v.name),
+            label = '#' .. i .. '. ' .. EscapeHtml(v.name) .. (v.is_default and ' ★' or ''),
             value = v.id,
+            isDefault = v.is_default,
             desc = RSG.Label.choose,
         }
     end
     UI.Open('default', GetCurrentResourceName(), 'outfits_menu',
         {title = RSG.Label.clothes, subtext = RSG.Label.choose, align = 'top-left', elements = elements, itemHeight = "4vh"},
         function(data)
-            OutfitsManage(data.current.value)
+            OutfitsManage(data.current.value, data.current.isDefault)
         end, function(_, menu)
             menu.close()
         end)
 end
 
-function OutfitsManage(outfitId)
+function OutfitsManage(outfitId, isDefault)
     UI.CloseAll()
     local elements = {
         {label = RSG.Label.wear, value = "SetOutfits", desc = RSG.Label.wear_desc},
-        {label = RSG.Label.delete, value = "DeleteOutfit", desc = RSG.Label.delete_desc, danger = true}
     }
+    if not isDefault then
+        elements[#elements + 1] = {label = RSG.Label.delete, value = "DeleteOutfit", desc = RSG.Label.delete_desc, danger = true}
+    end
     UI.Open('default', GetCurrentResourceName(), 'outfits_menu_manage',
         {title = RSG.Label.clothes, subtext = RSG.Label.options, align = 'top-left', elements = elements, itemHeight = "4vh"}, function(data, menu)
         menu.close()

@@ -107,6 +107,14 @@ RegisterNetEvent('rsg-character:server:SaveSkin', function(skin, clothes)
         MySQL.insert.await('INSERT INTO playerskins (citizenid, skin, clothes) VALUES (?, ?, ?)', { citizenid, encodedSkin, encodedClothes })
     end
 
+    -- first-time creation: store the chosen clothes as the protected "Default" wardrobe outfit
+    if session.isNew then
+        local hasDefault = MySQL.scalar.await('SELECT 1 FROM playeroutfit WHERE citizenid = ? AND is_default = 1 LIMIT 1', { citizenid })
+        if not hasDefault then
+            MySQL.insert.await('INSERT INTO playeroutfit (citizenid, name, clothes, is_default) VALUES (?, ?, ?, 1)', { citizenid, locale('default_outfit_name'), encodedClothes })
+        end
+    end
+
     CreatorSessions[src] = nil
     RSG.ResetBucket(src)
     TriggerClientEvent('rsg-character:client:OpenSpawnSelect', src)
