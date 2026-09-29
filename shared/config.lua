@@ -338,6 +338,23 @@ RSG.Cloakroom = {
     vector3(2550.67, -1159.46, 53.73)   -- saint denis
 }
 
+-- ox_target wardrobe props (opens the cloakroom / outfits menu)
+RSG.WardrobeTarget = {
+    enabled  = true,
+    distance = 2.0,
+    icon     = 'fa-solid fa-shirt',
+    label    = 'Open Wardrobe',
+    models   = {
+        'p_armoir02x', 'p_armoir02x_loot', 'p_armoir03x', 'p_armoir04x', 'p_armoir04x_loot',
+        'p_armoir05x', 'p_armoir05x_loot', 'p_armoir06x', 'p_armoir07bx', 'p_armoir07x',
+        'p_armoir07x_loot', 'p_armoir08x', 'p_armoireregal01', 'p_armoiroffice66x', 's_armoir02x',
+        'p_cabinet09x', 'p_chest02x', 'p_commode01x', 'p_commode02x', 'p_commodini01x', 'p_dresser03x',
+        'p_dresser04x', 'p_dresser05x', 'p_dresser06x', 'p_dresser07x', 'p_dresser08x', 'p_dresser09x',
+        'p_dresser10x', 'p_dresser11x', 'p_dresser11x_static', 'p_dresserval01x', 'p_sdtheater_chest01x',
+        'p_sidetable11x', 'p_vanity01x', 'p_vanity02x', 'p_washstand02x', 'p_washstand02x_static',
+	},
+}
+
 RSG.Label = {
     boot_accessories    = locale('labels.boot_accessories'),
     pants               = locale('labels.pants'),

@@ -600,6 +600,33 @@ CreateThread(function()
     end
 end)
 
+-- ox_target wardrobe props
+CreateThread(function()
+    local cfg = RSG.WardrobeTarget
+    if not cfg or not cfg.enabled or GetResourceState('ox_target') ~= 'started' then return end
+    exports.ox_target:addModel(cfg.models, {
+        {
+            name = 'rsg_character_wardrobe',
+            icon = cfg.icon,
+            label = cfg.label,
+            distance = cfg.distance,
+            canInteract = function()
+                return not LocalPlayer.state.inClothingStore and not IsPedDeadOrDying(cache.ped, true)
+            end,
+            onSelect = function()
+                Outfits()
+            end,
+        },
+    })
+end)
+
+AddEventHandler('onResourceStop', function(resource)
+    if resource ~= GetCurrentResourceName() or not RSG.WardrobeTarget then return end
+    if GetResourceState('ox_target') == 'started' then
+        exports.ox_target:removeModel(RSG.WardrobeTarget.models, 'rsg_character_wardrobe')
+    end
+end)
+
 function GenerateMenu()
     TriggerEvent('rsg-horses:client:FleeHorse')
     Wait(0)
