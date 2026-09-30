@@ -45,6 +45,7 @@ local function EndScene()
     LocalPlayer.state.inCharacterSelect = false
     ClearOverrideWeather()
     NetworkClearClockTimeOverride()
+    pcall(function() exports.weathersync:setSyncEnabled(true) end)
     ClearPeds()
     if sceneCam then
         RenderScriptCams(false, true, 500, true, true, 0)
@@ -414,7 +415,10 @@ local function RunSceneLoop(loc)
         while sceneActive do
             Wait(0)
             SetMouseCursorActiveThisFrame()
-            DrawLightWithRange(lightCoords.x, lightCoords.y, lightCoords.z, 255, 255, 255, 12.0, 100.0)
+            -- keep it sunny/midday every frame so nothing darkens the lineup
+            Citizen.InvokeNative(0x59174F1AFE095B5A, `SUNNY`, true, true, true, 0.0, false)
+            NetworkClockTimeOverride(12, 0, 0, 0, true)
+            DrawLightWithRange(lightCoords.x, lightCoords.y, lightCoords.z, 255, 250, 235, 20.0, 60.0)
             DrawHeaderText()
 
             sweepTimer = sweepTimer - 1
@@ -508,7 +512,12 @@ local function RunCharSelectScene(slots)
     ClearNearbyPeds(clearCoords, 20.0)
     ClearNearbyVehicles(clearCoords, 20.0)
 
-    Citizen.InvokeNative(0x59174F1AFE095B5A, `SUNNY`, false, true, true, 1.0, false)
+    -- Stop weathersync fighting the scene, and force a bright clear midday
+    pcall(function() exports.weathersync:setSyncEnabled(false) end)
+    pcall(function() exports.weathersync:setMyWeather('sunny', 0, false, 0) end)
+    pcall(function() exports.weathersync:setMyTime(12, 0, 0, 0, true) end)
+    ClearTimecycleModifier()
+    Citizen.InvokeNative(0x59174F1AFE095B5A, `SUNNY`, true, true, true, 0.0, false)
     NetworkClockTimeOverride(12, 0, 0, 0, true)
     NetworkClockTimeOverride_2(12, 0, 0, 0, true, true)
     Citizen.InvokeNative(0x193DFC0526830FD6, 0.0)

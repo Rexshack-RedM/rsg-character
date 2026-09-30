@@ -45,8 +45,7 @@ html, body {
     inset: 0;
     pointer-events: none;
     background:
-        radial-gradient(ellipse at center, rgba(0,0,0,0) 45%, rgba(0,0,0,0.65) 100%),
-        rgba(0,0,0,0.08);
+        radial-gradient(ellipse at center, rgba(0,0,0,0) 70%, rgba(0,0,0,0.15) 100%);
     z-index: 1;
 }
 
