@@ -115,9 +115,10 @@ RegisterNetEvent('rsg-character:server:SaveSkin', function(skin, clothes)
         end
     end
 
+    local isNew = session.isNew
     CreatorSessions[src] = nil
     RSG.ResetBucket(src)
-    TriggerClientEvent('rsg-character:client:OpenSpawnSelect', src)
+    TriggerClientEvent('rsg-character:client:OpenSpawnSelect', src, nil, isNew)
 
     local identityFields = RSG.WebhookIdentityFields(src)
     RSG.SendWebhook('appearance_saved', {

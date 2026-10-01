@@ -17,6 +17,16 @@ local function WaitForSkin()
 end
 
 local OpenSpawnMenu
+local pendingFullHeal = false
+
+-- new characters: the creator's model swap leaves the ped at the model's default health and empty cores
+local function RestoreFullHealth(ped)
+    SetEntityHealth(ped, GetEntityMaxHealth(ped), 0)
+    Citizen.InvokeNative(0xC6258F41D86676E0, ped, 0, 100) -- health core
+    Citizen.InvokeNative(0xC6258F41D86676E0, ped, 1, 100) -- stamina core
+    Citizen.InvokeNative(0xC6258F41D86676E0, ped, 2, 100) -- deadeye core
+    RestorePlayerStamina(PlayerId(), 100.0)
+end
 
 
 local function TeleportToSpawn(coords, heading, fromMenu)
@@ -91,6 +101,10 @@ local function TeleportToSpawn(coords, heading, fromMenu)
     SetEntityCollision(ped, true, true)
     SetEntityVisible(ped, true, false)
     ResetEntityAlpha(ped)
+    if pendingFullHeal then
+        pendingFullHeal = false
+        RestoreFullHealth(ped)
+    end
     FreezeEntityPosition(ped, false)
     UI.HideLoadingScreen()
     DoScreenFadeIn(1000)
@@ -131,8 +145,9 @@ OpenSpawnMenu = function()
     end
 end
 
-RegisterNetEvent('rsg-character:client:OpenSpawnSelect', function(lastPos)
+RegisterNetEvent('rsg-character:client:OpenSpawnSelect', function(lastPos, isNewCharacter)
     WaitForSkin()
+    pendingFullHeal = isNewCharacter == true
     local ped = PlayerPedId()
     FreezeEntityPosition(ped, true)
     SetEntityVisible(ped, false, false)
