@@ -1,5 +1,15 @@
 
 local spawnedPeds = {}
+
+local PreviewScenarios = {
+    'WORLD_HUMAN_BADASS',
+    'WORLD_HUMAN_GUARD_LAZY',
+    'WORLD_HUMAN_GUARD_MILITARY',
+    'WORLD_HUMAN_SMOKE',
+    'WORLD_HUMAN_SMOKE_CIGAR',
+    'WORLD_HUMAN_SMOKE_NERVOUS_STRESSED',
+    'WORLD_HUMAN_WRITE_NOTEBOOK',
+}
 local FindSpawnedPed
 local sceneCam = nil
 local sceneActive = false
@@ -164,7 +174,7 @@ local function SpawnSlotPed(slot, index, total, loc, camX, camY)
     SetEntityInvincible(handle, true)
     SetBlockingOfNonTemporaryEvents(handle, true)
 
-    TaskStartScenarioInPlace(handle, `WORLD_HUMAN_STAND_IMPATIENT`, 0, true)
+    TaskStartScenarioInPlace(handle, joaat(PreviewScenarios[math.random(#PreviewScenarios)]), 0, true)
 
     if slot.exists and slot.skin then
         local waited = 0
