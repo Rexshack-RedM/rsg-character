@@ -259,7 +259,8 @@ end
 local function Setup()
     DoScreenFadeOut(500)
     Wait(2000)
-    exports.weathersync:setMyTime(0, 0, 0, 0, true)
+    pcall(function() exports['rsg-weather']:setSyncEnabled(false) end)
+    pcall(function() exports['rsg-weather']:setMyTime(0, 0, 0, 0) end)
     lightsOn = true
     Citizen.InvokeNative(0x513F8AA5BF2F17CF, -561.4, -3782.6, 237.6, 50.0, 20)
     Citizen.InvokeNative(0x9748FA4DE50CCE3E, "AZL_RDRO_Character_Creation_Area", true, true)
@@ -628,7 +629,7 @@ function EndCharacterCreatorCam(anim, anim1)
         Citizen.InvokeNative(0x84EEDB2C6E650000, animscene)
     end
     Citizen.InvokeNative(0x5A8B01199C3E79C3)
-    exports.weathersync:setSyncEnabled(true)
+    pcall(function() exports['rsg-weather']:setSyncEnabled(true) end)
     ClearTimecycleModifier()
     RemoveImaps()
     AnimpostfxStopAll()

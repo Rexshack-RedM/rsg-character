@@ -55,7 +55,7 @@ local function EndScene()
     LocalPlayer.state.inCharacterSelect = false
     ClearOverrideWeather()
     NetworkClearClockTimeOverride()
-    pcall(function() exports.weathersync:setSyncEnabled(true) end)
+    pcall(function() exports['rsg-weather']:setSyncEnabled(true) end)
     ClearPeds()
     if sceneCam then
         RenderScriptCams(false, true, 500, true, true, 0)
@@ -523,9 +523,9 @@ local function RunCharSelectScene(slots)
     ClearNearbyVehicles(clearCoords, 20.0)
 
     -- Stop weathersync fighting the scene, and force a bright clear midday
-    pcall(function() exports.weathersync:setSyncEnabled(false) end)
-    pcall(function() exports.weathersync:setMyWeather('sunny', 0, false, 0) end)
-    pcall(function() exports.weathersync:setMyTime(12, 0, 0, 0, true) end)
+    pcall(function() exports['rsg-weather']:setSyncEnabled(false) end)
+    pcall(function() exports['rsg-weather']:setMyWeather('sunny', 0, false) end)
+    pcall(function() exports['rsg-weather']:setMyTime(12, 0, 0, 0) end)
     ClearTimecycleModifier()
     Citizen.InvokeNative(0x59174F1AFE095B5A, `SUNNY`, true, true, true, 0.0, false)
     NetworkClockTimeOverride(12, 0, 0, 0, true)
