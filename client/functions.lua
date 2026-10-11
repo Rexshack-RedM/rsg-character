@@ -915,17 +915,19 @@ function LoadFeatures(target, data)
         if data[k] ~= nil then
             local value = data[k] / 100
             NativeSetPedFaceFeature(target, v, value)
-
-            if v == 'teeth' then
-                if IsPedMale(target) then
-                    Citizen.InvokeNative(0xD3A7B003ED343FD9, target, ComponentsMale["teeth"][tonumber(data.teeth) or 1], true, true, true)
-                else
-                    Citizen.InvokeNative(0xD3A7B003ED343FD9, target, ComponentsFemale["teeth"][tonumber(data.teeth) or 1], true, true, true)
-                end
-            end
-
-            Citizen.InvokeNative(0xCC8CA3E88256E58F, target, false, true, true, true, false)
         end
+    end
+    LoadTeeth(target, data)
+    Citizen.InvokeNative(0xCC8CA3E88256E58F, target, false, true, true, true, false)
+end
+
+function LoadTeeth(target, data)
+    if not data or data.teeth == nil then return end
+    local list = (IsPedMale(target) and ComponentsMale or ComponentsFemale)["teeth"]
+    local hash = list and list[tonumber(data.teeth) or 1]
+    if hash then
+        NativeSetPedComponentEnabled(target, tonumber(hash), false, true, true)
+        NativeUpdatePedVariation(target)
     end
 end
 
@@ -1191,10 +1193,6 @@ function RandomizeCreatorAppearance(target)
     LoadHair(target, CreatorCache)
     if isMale then LoadBeard(target, CreatorCache) end
     LoadFeatures(target, CreatorCache)
-    local teeth = (isMale and ComponentsMale or ComponentsFemale)["teeth"]
-    if teeth and teeth[CreatorCache["teeth"]] then
-        NativeSetPedComponentEnabled(target, tonumber(teeth[CreatorCache["teeth"]]), false, true, true)
-    end
     LoadOverlays(target, CreatorCache)
     NativeUpdatePedVariation(target)
 
