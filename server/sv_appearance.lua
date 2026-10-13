@@ -185,6 +185,24 @@ local validNationality
 local function IsValidNationality(value)
     if not validNationality then
         validNationality = {}
+        -- The client builds the dropdown with the PLAYER's ox_lib language, which can
+        -- differ from the server's language. Accept the translation from every locale
+        -- file so players on any language can create a character.
+        local resource = GetCurrentResourceName()
+        local langs = { 'en', 'de', 'el', 'es', 'fr', 'ja', 'nl', 'pl', 'pt-br', 'ro' }
+        for _, lang in ipairs(langs) do
+            local raw = LoadResourceFile(resource, ('locales/%s.json'):format(lang))
+            local ok, data = pcall(json.decode, raw or '')
+            local list = ok and type(data) == 'table' and data.nationalities
+            if type(list) == 'table' then
+                for _, key in ipairs(RSG.Nationalities) do
+                    if type(list[key]) == 'string' then
+                        validNationality[list[key]] = true
+                    end
+                end
+            end
+        end
+        -- Always include the server's own locale as a fallback
         for _, key in ipairs(RSG.Nationalities) do
             validNationality[locale('nationalities.' .. key)] = true
         end
