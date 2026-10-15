@@ -23,6 +23,42 @@ local BODY_CATEGORY_MAP = {
     leg_attachments = "BODIES_LOWER",
 }
 
+-- Layer order for applying clothing (base -> inner -> middle -> outer -> equipment)
+local CLOTHING_ORDER = {
+    -- inner layer
+    "pants", "skirts", "boots", "shirts_full",
+    -- middle layer
+    "vests", "suspenders", "chaps", "spats", "boot_accessories", "leg_attachments",
+    -- outer layer
+    "coats", "coats_closed", "ponchos", "cloaks", "aprons", "armor",
+    "neckwear", "neckties", "gloves", "gauntlets",
+    -- equipment & attachments
+    "gunbelts", "holsters_right", "holsters_left", "holsters_crossdraw", "holsters_knife",
+    "loadouts", "ammo_pistols", "ammo_rifles", "satchels", "belts", "belt_buckles",
+    "talisman_belt", "talisman_holster", "talisman_satchel", "talisman_wrist",
+    "badges", "accessories", "jewelry_bracelets", "jewelry_rings_left", "jewelry_rings_right",
+    "masks", "eyewear", "hats",
+}
+local CLOTHING_ORDER_INDEX = {}
+for i, cat in ipairs(CLOTHING_ORDER) do CLOTHING_ORDER_INDEX[cat] = i end
+
+-- Iterate a clothes table in layer order; unknown categories go last (alphabetical)
+function OrderedClothes(tbl)
+    local keys = {}
+    for k in pairs(tbl) do keys[#keys + 1] = k end
+    table.sort(keys, function(a, b)
+        local ia, ib = CLOTHING_ORDER_INDEX[a] or 1000, CLOTHING_ORDER_INDEX[b] or 1000
+        if ia ~= ib then return ia < ib end
+        return tostring(a) < tostring(b)
+    end)
+    local i = 0
+    return function()
+        i = i + 1
+        local k = keys[i]
+        if k ~= nil then return k, tbl[k] end
+    end
+end
+
 function EnsureBareBody(category)
     local ped = PlayerPedId()
     local gender = IsPedMale(ped) and "male" or "female"
@@ -34,7 +70,7 @@ function EnsureBareBody(category)
         end
     end
 
-    for cat, v in pairs(ClothesCache) do
+    for cat, v in OrderedClothes(ClothesCache) do
         local hash
         if type(v) == "table" then
             local model, texture = tonumber(v.model) or 0, tonumber(v.texture) or 1
@@ -303,8 +339,26 @@ AddEventHandler('rsg-character:client:ApplyClothes', function(ClothesComponents,
             ClothesCache = ClothesComponents
             local appliedCategories = {}
             for k, v in pairs(ClothesComponents) do
+                if v ~= nil and v ~= 0 then appliedCategories[k] = true end
+            end
+            -- 1. Base body first for any body part not covered by clothing
+            local bodyPartCovered = {}
+            for cat, bodyPart in pairs(BODY_CATEGORY_MAP) do
+                if appliedCategories[cat] then
+                    bodyPartCovered[bodyPart] = true
+                end
+            end
+            for _, bodyPart in ipairs({ "BODIES_UPPER", "BODIES_LOWER" }) do
+                if not bodyPartCovered[bodyPart] then
+                    local hash = GetBodyFallbackHash(bodyPart)
+                    if hash then
+                        NativeSetPedComponentEnabledClothes(_Target, hash, false, true, true)
+                    end
+                end
+            end
+            -- 2. Clothing in layer order
+            for k, v in OrderedClothes(ClothesComponents) do
                 if v ~= nil and v ~= 0 then
-                    appliedCategories[k] = true
                     if type(v) ~= "table" then v = { hash = v} end
                     if v.hash and v.hash ~= 0 then
                         NativeSetPedComponentEnabledClothes(_Target, v.hash, false, true, true)
@@ -320,21 +374,6 @@ AddEventHandler('rsg-character:client:ApplyClothes', function(ClothesComponents,
                                 NativeSetPedComponentEnabledClothes(_Target, tonumber(entry.hash), false, true, true)
                             end
                         end
-                    end
-                end
-            end
-            local bodyPartCovered = {}
-            for cat, bodyPart in pairs(BODY_CATEGORY_MAP) do
-                if appliedCategories[cat] then
-                    bodyPartCovered[bodyPart] = true
-                end
-            end
-            for cat, bodyPart in pairs(BODY_CATEGORY_MAP) do
-                if not bodyPartCovered[bodyPart] then
-                    bodyPartCovered[bodyPart] = true
-                    local hash = GetBodyFallbackHash(bodyPart)
-                    if hash then
-                        NativeSetPedComponentEnabledClothes(_Target, hash, false, true, true)
                     end
                 end
             end

@@ -127,6 +127,33 @@ setr ox:locale en
 
 ---
 
+## Clothing Order
+
+RedM draws clothing in layers, so the order items go on matters. If a coat goes on before a shirt, or a hat before the hair, you can get clipping, missing body parts or floating accessories. rsg-character always applies clothing in a fixed layer order, both when an outfit loads and when you change an item in the clothing store.
+
+### How it works
+1. **Base body first.** For each body part (upper and lower) that no clothing covers, the bare skin for your skin tone and body type goes on before any clothes.
+2. **Clothing in layer order.** Every category then goes on in the order below, so outer items always sit on top of inner ones.
+3. **Unknown categories last.** Any category not in the list goes on after everything else, sorted alphabetically.
+
+| Layer | Categories (in order) |
+|---|---|
+| 1. Inner | `pants`, `skirts`, `boots`, `shirts_full` |
+| 2. Middle | `vests`, `suspenders`, `chaps`, `spats`, `boot_accessories`, `leg_attachments` |
+| 3. Outer | `coats`, `coats_closed`, `ponchos`, `cloaks`, `aprons`, `armor`, `neckwear`, `neckties`, `gloves`, `gauntlets` |
+| 4. Equipment & accessories | `gunbelts`, `holsters_right`, `holsters_left`, `holsters_crossdraw`, `holsters_knife`, `loadouts`, `ammo_pistols`, `ammo_rifles`, `satchels`, `belts`, `belt_buckles`, `talisman_belt`, `talisman_holster`, `talisman_satchel`, `talisman_wrist`, `badges`, `accessories`, `jewelry_bracelets`, `jewelry_rings_left`, `jewelry_rings_right`, `masks`, `eyewear`, `hats` |
+
+### Changing the order
+The order is set by the `CLOTHING_ORDER` table at the top of `client/clothes.lua`. Move a category up or down to change when it goes on (later means drawn on top), or add a new category to give it a fixed place. The `OrderedClothes(tbl)` helper walks any clothes table in this order, so other client code can use it too:
+
+```lua
+for category, data in OrderedClothes(ClothesCache) do
+    -- applied in layer order
+end
+```
+
+---
+
 ## Usage
 
 ### Players
