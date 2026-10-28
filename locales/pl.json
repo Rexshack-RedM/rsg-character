@@ -453,5 +453,6 @@
         "outdated": "NIEAKTUALNE! Zaktualizuj do wersji %s",
         "download": "Pobierz z: %s",
         "newer": "Używasz nowszej wersji (%s) niż zdalna (%s). Możliwa wersja deweloperska?"
-    }
+    },
+    "outfit_wear_failed": "Couldn't wear that outfit here - use a wardrobe or cloakroom"
 }

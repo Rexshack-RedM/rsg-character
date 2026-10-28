@@ -453,5 +453,6 @@
         "outdated": "DESATUALIZADO! Atualize para a versão %s",
         "download": "Baixe em: %s",
         "newer": "Você está usando uma versão mais nova (%s) que a remota (%s). Possível build de desenvolvimento?"
-    }
+    },
+    "outfit_wear_failed": "Couldn't wear that outfit here - use a wardrobe or cloakroom"
 }

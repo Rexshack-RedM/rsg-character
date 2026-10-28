@@ -542,16 +542,14 @@ function FirstMenu()
                         label = locale('creator.birthdate.input.label'),
                         format = 'YYYY-MM-DD',
                         returnString = true,
-                        min = '1750-01-01',
-                        max = '1900-01-01',
-                        default = '1870-01-01'
+                        min = RSG.Birthdate.Min,
+                        max = RSG.Birthdate.Max,
+                        default = Birthdate or RSG.Birthdate.Default
                     }
                 })
                 if not dialog then return false end
-                local by, bm, bd = tostring(dialog[1] or ''):match('^(%d%d%d%d)%-(%d%d)%-(%d%d)$')
-                by, bm, bd = tonumber(by), tonumber(bm), tonumber(bd)
-                if not (by and by >= 1750 and by <= 1900 and bm >= 1 and bm <= 12 and bd >= 1 and bd <= 31) then
-                    lib.notify({ title = locale('creator.birthdate.input.header'), description = locale('creator.birthdate.invalid', '1750-01-01', '1900-01-01'), type = 'error', duration = 7000 })
+                if not RSG.IsValidBirthdate(dialog[1]) then
+                    lib.notify({ title = locale('creator.birthdate.input.header'), description = locale('creator.birthdate.invalid', RSG.Birthdate.Min, RSG.Birthdate.Max), type = 'error', duration = 7000 })
                     return false
                 end
                 Birthdate = dialog[1]
@@ -872,8 +870,8 @@ function OpenMouthMenu()
     UI.CloseAll()
 
     RequestAnimDict("FACE_HUMAN@GEN_MALE@BASE")
-
-    while not HasAnimDictLoaded("FACE_HUMAN@GEN_MALE@BASE") do
+    local animDeadline = GetGameTimer() + 5000
+    while not HasAnimDictLoaded("FACE_HUMAN@GEN_MALE@BASE") and GetGameTimer() < animDeadline do
         Wait(100)
     end
 

@@ -453,5 +453,6 @@
         "outdated": "ΠΑΡΩΧΗΜΕΝΗ! Ενημερώστε στην έκδοση %s",
         "download": "Λήψη από: %s",
         "newer": "Χρησιμοποιείτε νεότερη έκδοση (%s) από την απομακρυσμένη (%s). Ίσως dev build;"
-    }
+    },
+    "outfit_wear_failed": "Couldn't wear that outfit here - use a wardrobe or cloakroom"
 }

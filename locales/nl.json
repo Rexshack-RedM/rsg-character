@@ -453,5 +453,6 @@
         "outdated": "VEROUDERD! Update naar versie %s",
         "download": "Download via: %s",
         "newer": "Je gebruikt een nieuwere versie (%s) dan de remote (%s). Mogelijk een dev-build?"
-    }
+    },
+    "outfit_wear_failed": "Couldn't wear that outfit here - use a wardrobe or cloakroom"
 }

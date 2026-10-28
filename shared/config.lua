@@ -11,6 +11,13 @@ RSG.ProfanityWords = {
 -- Character select: how many character slots each player license gets
 RSG.MaxCharacterSlots = 4
 
+-- Character creator: allowed birthdate range (YYYY-MM-DD), checked on client and server
+RSG.Birthdate = {
+    Min = '1750-01-01',
+    Max = '1900-12-31',
+    Default = '1870-01-01',
+}
+
 -- /logout: saves the current character and returns the player to character select
 RSG.Logout = {
     Enabled = true,

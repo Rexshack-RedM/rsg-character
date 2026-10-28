@@ -453,5 +453,6 @@
         "outdated": "ÎNVECHIT! Actualizează la versiunea %s",
         "download": "Descarcă de la: %s",
         "newer": "Rulezi o versiune mai nouă (%s) decât cea de la distanță (%s). Posibil build de dezvoltare?"
-    }
+    },
+    "outfit_wear_failed": "Couldn't wear that outfit here - use a wardrobe or cloakroom"
 }

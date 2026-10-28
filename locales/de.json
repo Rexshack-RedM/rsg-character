@@ -453,5 +453,6 @@
         "outdated": "VERALTET! Bitte auf Version %s aktualisieren",
         "download": "Download unter: %s",
         "newer": "Du verwendest eine neuere Version (%s) als die entfernte (%s). Eventuell ein Dev-Build?"
-    }
+    },
+    "outfit_wear_failed": "Couldn't wear that outfit here - use a wardrobe or cloakroom"
 }

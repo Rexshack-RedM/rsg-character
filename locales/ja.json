@@ -453,5 +453,6 @@
         "outdated": "古いバージョンです！バージョン %s に更新してください",
         "download": "ダウンロード: %s",
         "newer": "新しいバージョン (%s) を使用しています（リモート: %s）。開発版ですか？"
-    }
+    },
+    "outfit_wear_failed": "Couldn't wear that outfit here - use a wardrobe or cloakroom"
 }
