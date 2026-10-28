@@ -358,7 +358,7 @@ RSG.WardrobeTarget = {
     enabled  = true,
     distance = 2.0,
     icon     = 'fa-solid fa-shirt',
-    label    = 'Open Wardrobe',
+    label    = locale('wardrobe_target.label'),
     models   = {
         'p_armoir02x', 'p_armoir02x_loot', 'p_armoir03x', 'p_armoir04x', 'p_armoir04x_loot',
         'p_armoir05x', 'p_armoir05x_loot', 'p_armoir06x', 'p_armoir07bx', 'p_armoir07x',

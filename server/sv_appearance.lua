@@ -234,6 +234,10 @@ RegisterNetEvent('rsg-multicharacter:server:createCharacter', function(newData)
 
     if not IsValidName(newData.firstname) or not IsValidName(newData.lastname)
         or not IsValidNationality(newData.nationality) or not IsValidBirthdate(newData.birthdate) then
+        -- never fail silently: the client has already closed the creator
+        CreatorSessions[src] = nil
+        TriggerClientEvent('ox_lib:notify', src, { title = locale('missing_character_info.title'), description = locale('missing_character_info.description'), type = 'error', duration = 7000 })
+        TriggerClientEvent('rsg-character:client:OpenCharSelect', src)
         return
     end
 

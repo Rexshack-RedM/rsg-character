@@ -432,6 +432,12 @@
         const values = inputs.map((inp) => inp.value);
         const missing = dialogFieldDefs.some((f, i) => f.required && !values[i]);
         if (missing) return;
+        const outOfRange = dialogFieldDefs.some((f, i) => f.type === "date" && values[i] &&
+            ((f.min && values[i] < f.min) || (f.max && values[i] > f.max)));
+        if (outOfRange) {
+            inputs.forEach((inp, i) => { if (dialogFieldDefs[i] && dialogFieldDefs[i].type === "date") inp.reportValidity(); });
+            return;
+        }
         hideOverlayOrApp(dialogModal);
         post("dialogSubmit", { values });
     });

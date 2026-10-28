@@ -548,6 +548,12 @@ function FirstMenu()
                     }
                 })
                 if not dialog then return false end
+                local by, bm, bd = tostring(dialog[1] or ''):match('^(%d%d%d%d)%-(%d%d)%-(%d%d)$')
+                by, bm, bd = tonumber(by), tonumber(bm), tonumber(bd)
+                if not (by and by >= 1750 and by <= 1900 and bm >= 1 and bm <= 12 and bd >= 1 and bd <= 31) then
+                    lib.notify({ title = locale('creator.birthdate.input.header'), description = locale('creator.birthdate.invalid', '1750-01-01', '1900-01-01'), type = 'error', duration = 7000 })
+                    return false
+                end
                 Birthdate = dialog[1]
                 menu.setElement(IndexOf("birthdate"), "label", Birthdate)
                 menu.setElement(IndexOf("birthdate"), "itemHeight", "4vh")
