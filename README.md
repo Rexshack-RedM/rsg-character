@@ -38,8 +38,7 @@ Character selection, creation, clothing store and spawn system for **RSG-Core** 
 - Discord webhook logging for character created, deleted and selected, appearance saved and outfit purchased.
 - A `/loadskin` command to reload your appearance.
 - A `/logout` command that saves and returns you to character select (with cooldown, blocked while dead).
-- Multijob: hold several jobs, switch between them (`/myjobs`) and manage every job definition in-game (`/jobadmin`). See [Multijob](#multijob-merged-from-rsg-multijob).
-- Locales: en, de, el, es, fr, it, ja, nl, pl, pt-br, ro.
+- Locales: en, de, el, es, fr, ja, nl, pl, pt-br, ro.
 - Exports for other resources (see below).
 
 ---
@@ -179,9 +178,6 @@ end
 | Command | Description |
 |---|---|
 | `/logout` | Saves your character and returns you to character select. |
-| `/myjobs` | Opens your job registry: switch job, toggle duty, resign. |
-| `/removejob [id] [job]` | Admin: removes a job from a player (server ID or citizen ID). |
-| `/jobadmin` | Admin: create, edit and delete server jobs. |
 | `/loadskin` | Reloads your saved skin and clothing. It doesn't work while you're dead, cuffed, hogtied, lassoed, being dragged, ragdolled, falling or jailed. |
 
 ### Exports (client)
@@ -210,45 +206,6 @@ exports['rsg-character']:IsCothingActive()
 | `rsg-character:client:OpenSpawnSelect` | client | Opens the spawn select screen. |
 | `rsg-character:client:ApplySkin` | client | Applies a skin and clothes to the player. |
 | `rsg-character:client:outfits` | client | Opens the outfit wardrobe. |
-| `rsg-multijob:client:openmenu` | client | Opens the job registry (same as `/myjobs`). |
-
----
-
-## Multijob (merged from rsg-multijob)
-
-rsg-multijob is now built into rsg-character. **Remove the old `rsg-multijob` resource** from your server and `server.cfg`.
-
-- Start `rsg-character` **directly after `rsg-core`**, before other job resources (job definitions are registered with rsg-core on start).
-- Run `installation/multijob.sql` (tables `player_jobs` and `multijob_jobs` are also created automatically). Existing data is reused as-is.
-- Config: `shared/multijob_config.lua` (max jobs, switch cooldown, `/jobadmin` permission, icons, webhooks). Default jobs: `shared/multijob_default_jobs.lua`.
-- Commands: `/myjobs`, `/removejob [id] [job]`, `/jobadmin`.
-- Compatibility: `provide 'rsg-multijob'` is set, the `rsg-multijob:*` event and callback names are unchanged, and `exports['rsg-multijob']:AddJob(...)` (and the other exports) still work, as do `exports['rsg-character']:AddJob(...)` etc.
-- The multijob NUI runs in an iframe (`html/multijob/`) inside rsg-character's NUI page.
-
-### Multijob exports (server)
-```lua
-exports['rsg-character']:AddJob(identifier, job, grade, bypassMax)
-exports['rsg-character']:RemoveJob(identifier, job)
-exports['rsg-character']:GetJobs(identifier)
-exports['rsg-character']:HasJob(identifier, job)
-exports['rsg-character']:CanTakeJob(identifier, job, bypassMax)
-exports['rsg-character']:GetJobCount(identifier)
-exports['rsg-character']:GetJobDefinition(name)
-exports['rsg-character']:GetJobDefinitions()
-```
-`identifier` is a server ID or citizen ID. The same calls work as `exports['rsg-multijob']:...`.
-
-
-## Changelog
-
-### 3.1.0
-- Merged rsg-multijob into rsg-character (see above). Deleting a character now also clears its multijob jobs.
-- Character select events are rate-limited server-side (slot list, select, create).
-- Starter items check `CanAddItem` before being given.
-- Italian nationality names are accepted when creating a character.
-- Cloakroom prompt no longer opens the wardrobe twice and is removed on resource stop.
-- The job menu and job admin panel can't be open at the same time.
-- Removed unused code.
 
 ---
 

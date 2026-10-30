@@ -1,3 +1,5 @@
+local RSGCore = exports['rsg-core']:GetCoreObject()
+
 function GetGroundedZ(x, y, z)
     RequestCollisionAtCoord(x, y, z)
     local timeout = GetGameTimer() + 3000
