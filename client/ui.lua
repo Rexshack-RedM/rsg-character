@@ -48,14 +48,6 @@ local function buildMenuObject()
         sendMenu()
     end
 
-    function menu.addNewElement(element)
-        table.insert(state.elements, element)
-    end
-
-    function menu.removeElementByIndex(index)
-        table.remove(state.elements, index)
-    end
-
     function menu.close()
         UI.CloseAll()
     end

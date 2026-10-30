@@ -633,6 +633,7 @@ CreateThread(function()
                 PromptSetActiveGroupThisFrame(Cloakroom, PromptGroup)
                 if PromptHasHoldModeCompleted(CloakPrompt) then
                     Outfits()
+                    Wait(1000) -- hold-complete stays true for a moment; don't open twice
                     break
                 end
             end
@@ -792,6 +793,7 @@ AddEventHandler('onResourceStop', function(resourceName)
     if GetCurrentResourceName() ~= resourceName then return end
     LocalPlayer.state.inClothingStore = false
     DestroyClothingCamera()
+    if CloakPrompt then PromptDelete(CloakPrompt) end
     for i=1, #RSG.CreatedEntries do
         if RSG.CreatedEntries[i].type == "BLIP" then
             RemoveBlip(RSG.CreatedEntries[i].handle)

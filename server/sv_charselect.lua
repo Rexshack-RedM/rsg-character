@@ -46,7 +46,19 @@ local function GetCharacterSlots(license)
 end
 
 local deleteCooldown = {}
-AddEventHandler('playerDropped', function() deleteCooldown[source] = nil end)
+local requestCooldown = {}
+AddEventHandler('playerDropped', function()
+    deleteCooldown[source] = nil
+    requestCooldown[source] = nil
+end)
+
+-- stops clients spamming DB queries / logins from character select
+local function Throttled(src, ms)
+    local now = GetGameTimer()
+    if requestCooldown[src] and now - requestCooldown[src] < ms then return true end
+    requestCooldown[src] = now
+    return false
+end
 
 local function OwnsCharacter(license, citizenid)
     if type(citizenid) ~= 'string' then return false end
@@ -66,6 +78,7 @@ end
 RegisterNetEvent('rsg-character:server:RequestCharacterSlots', function()
     local src = source
     if RSGCore.Functions.GetPlayer(src) then return end -- character select is only for logged-out players
+    if Throttled(src, 1000) then return end
     CreatorSessions[src] = nil
     RSG.SetPrivateBucket(src)
 
@@ -82,6 +95,7 @@ end)
 RegisterNetEvent('rsg-character:server:SelectCharacterSlot', function(citizenid)
     local src = source
     if RSGCore.Functions.GetPlayer(src) then return end
+    if Throttled(src, 1000) then return end
 
     local license = RSGCore.Functions.GetIdentifier(src, 'license')
     if not license or type(citizenid) ~= 'string' then
@@ -144,6 +158,7 @@ RegisterNetEvent('rsg-character:server:DeleteCharacterSlot', function(citizenid)
     RSGCore.Player.DeleteCharacter(src, citizenid)
     MySQL.update('DELETE FROM playerskins WHERE citizenid = ?', { citizenid })
     MySQL.update('DELETE FROM playeroutfit WHERE citizenid = ?', { citizenid })
+    MySQL.update('DELETE FROM player_jobs WHERE citizenid = ?', { citizenid })
 
     local identityFields = RSG.WebhookIdentityFields(src)
     RSG.SendWebhook('character_deleted', {
@@ -160,6 +175,7 @@ end)
 RegisterNetEvent('rsg-character:server:RequestCreateCharacterSlot', function(cid, selectedSex)
     local src = source
     if RSGCore.Functions.GetPlayer(src) then return end
+    if Throttled(src, 1000) then return end
 
     local license = RSGCore.Functions.GetIdentifier(src, 'license')
     cid = tonumber(cid)

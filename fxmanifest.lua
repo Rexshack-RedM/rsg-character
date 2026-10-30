@@ -4,7 +4,7 @@ game 'rdr3'
 lua54 'yes'
 
 description 'rsg-character'
-version '3.0.9'
+version '3.1.0'
 
 shared_scripts {
     '@ox_lib/init.lua',
@@ -19,6 +19,7 @@ client_scripts {
     'client/functions.lua',
     'client/spawn.lua',
     'client/ui.lua',
+    'client/multijob.lua',
 }
 
 ui_page 'html/index.html'
@@ -26,6 +27,10 @@ ui_page 'html/index.html'
 server_scripts {
     '@oxmysql/lib/MySQL.lua',
     'server/*.lua',
+    'server/multijob/webhook.lua',
+    'server/multijob/jobs.lua',
+    'server/multijob/server.lua',
+    'server/multijob/admin.lua',
 }
 
 files {
@@ -36,11 +41,29 @@ files {
     'data/clothing.lua',
     'data/hairs_list.lua',
     'data/clothes_list.lua',
+    'shared/multijob_config.lua',
+    'shared/multijob_default_jobs.lua',
     'locales/*.json',
+    'html/multijob/*.html',
+    'html/multijob/*.css',
+    'html/multijob/*.js',
     'html/index.html',
     'html/css/*.css',
     'html/js/*.js',
     'html/img/spawn/*.jpg',
+}
+
+provide 'rsg-multijob'
+
+server_exports {
+    'AddJob',
+    'RemoveJob',
+    'GetJobs',
+    'HasJob',
+    'CanTakeJob',
+    'GetJobCount',
+    'GetJobDefinition',
+    'GetJobDefinitions',
 }
 
 ox_libs {

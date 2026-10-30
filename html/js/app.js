@@ -685,6 +685,19 @@
         const msg = event.data;
         if (!msg || !msg.action) return;
 
+        // Multijob UI (html/multijob) runs in its own iframe
+        if (msg.target === "multijob") {
+            const frame = document.getElementById("multijob-frame");
+            if (!frame) return;
+            if (msg.action === "__hide") { frame.style.display = "none"; return; }
+            if (msg.action === "open" || msg.action === "admin:open") {
+                frame.style.display = "block";
+                frame.focus();
+            }
+            frame.contentWindow.postMessage(msg, "*");
+            return;
+        }
+
         switch (msg.action) {
             case "openMenu": renderMenu(msg); break;
             case "closeAll": closeAll(); break;

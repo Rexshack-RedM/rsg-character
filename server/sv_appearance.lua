@@ -189,7 +189,7 @@ local function IsValidNationality(value)
         -- differ from the server's language. Accept the translation from every locale
         -- file so players on any language can create a character.
         local resource = GetCurrentResourceName()
-        local langs = { 'en', 'de', 'el', 'es', 'fr', 'ja', 'nl', 'pl', 'pt-br', 'ro' }
+        local langs = { 'en', 'de', 'el', 'es', 'fr', 'ja', 'nl', 'pl', 'pt-br', 'ro', 'it' }
         for _, lang in ipairs(langs) do
             local raw = LoadResourceFile(resource, ('locales/%s.json'):format(lang))
             local ok, data = pcall(json.decode, raw or '')
@@ -266,7 +266,8 @@ RegisterNetEvent('rsg-multicharacter:server:createCharacter', function(newData)
 
     for _, entry in ipairs(RSG.StarterItems or {}) do
         local itemName, amount = entry.item, tonumber(entry.amount) or 1
-        if itemName and amount > 0 and RSGCore.Shared.Items[itemName] then
+        if itemName and amount > 0 and RSGCore.Shared.Items[itemName]
+            and exports['rsg-inventory']:CanAddItem(src, itemName, amount) then
             exports['rsg-inventory']:AddItem(src, itemName, amount, nil, nil, 'rsg-character:starter-items')
             TriggerClientEvent('rsg-inventory:client:ItemBox', src, RSGCore.Shared.Items[itemName], 'add', amount)
         end
