@@ -185,7 +185,7 @@ CreateThread(function()
 end)
 
 local function ApplySkinInner()
-    local data = lib.callback.await('rsg-character:server:getAppearance', 10000)
+    local data = RSGCore.Functions.AwaitCallback('rsg-character:server:getAppearance', 10000)
     if not data or not data.skin then return end
 
     local ped = PlayerPedId()
@@ -305,7 +305,7 @@ RegisterCommand('loadskin', function()
     local isJailed = (playerData and playerData.metadata and playerData.metadata.injail) or 0
 
     if isdead or cuffed or hogtied or lassoed or dragged or ragdoll or falling or isJailed > 0 then
-        lib.notify({ title = locale('loadskin_blocked.title'), description = locale('loadskin_blocked.description'), type = 'error', duration = 5000 })
+        RSGCore.Functions.Notify({ title = locale('loadskin_blocked.title'), description = locale('loadskin_blocked.description'), type = 'error', duration = 5000 })
         return
     end
 
@@ -317,7 +317,7 @@ end, false)
 local function checkStrings(input)
     if type(input) ~= 'string' or RSG.ProfanityWords[input:lower()]
         or #input < 2 or #input > 20 or not input:match('^%u%l+$') then
-        lib.notify({ title = locale('invalid_character_name.title'), description = locale('invalid_character_name.description'), type = 'error', duration = 7000 })
+        RSGCore.Functions.Notify({ title = locale('invalid_character_name.title'), description = locale('invalid_character_name.description'), type = 'error', duration = 7000 })
         return false
     end
     return true
@@ -549,7 +549,7 @@ function FirstMenu()
                 })
                 if not dialog then return false end
                 if not RSG.IsValidBirthdate(dialog[1]) then
-                    lib.notify({ title = locale('creator.birthdate.input.header'), description = locale('creator.birthdate.invalid', RSG.Birthdate.Min, RSG.Birthdate.Max), type = 'error', duration = 7000 })
+                    RSGCore.Functions.Notify({ title = locale('creator.birthdate.input.header'), description = locale('creator.birthdate.invalid', RSG.Birthdate.Min, RSG.Birthdate.Max), type = 'error', duration = 7000 })
                     return false
                 end
                 Birthdate = dialog[1]
@@ -559,7 +559,7 @@ function FirstMenu()
             end
             if data.current.value == 'save' then
                 if not AllRequiredFieldsFilled() then
-                    lib.notify({ title = locale('missing_character_info.title'), description = locale('missing_character_info.description'), type = 'error', duration = 7000 })
+                    RSGCore.Functions.Notify({ title = locale('missing_character_info.title'), description = locale('missing_character_info.description'), type = 'error', duration = 7000 })
                     return
                 end
 
@@ -584,7 +584,7 @@ function FirstMenu()
                     TriggerServerEvent('rsg-multicharacter:server:createCharacter', newData)
                     FotoMugshots()
                 else
-                    lib.notify({ title = locale('missing_character_info.title'), description = locale('missing_character_info.description'), type = 'error', duration = 7000 })
+                    RSGCore.Functions.Notify({ title = locale('missing_character_info.title'), description = locale('missing_character_info.description'), type = 'error', duration = 7000 })
                 end
             end
         end, function(data, menu)

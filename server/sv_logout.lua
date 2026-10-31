@@ -7,7 +7,7 @@ AddEventHandler('playerDropped', function()
 end)
 
 local function Notify(src, key, ntype)
-    TriggerClientEvent('ox_lib:notify', src, {
+    TriggerClientEvent('RSGCore:Client:Notify', src, {
         title = locale('logout.title'),
         description = locale(key),
         type = ntype or 'error',

@@ -4,10 +4,11 @@ game 'rdr3'
 lua54 'yes'
 
 description 'rsg-character'
-version '3.0.9'
+version '3.1.0'
 
 shared_scripts {
-    '@ox_lib/init.lua',
+    '@rsg-core/shared/require.lua',
+    '@rsg-core/shared/locale.lua',
     'shared/config.lua',
     'shared/functions.lua',
 }
@@ -43,11 +44,6 @@ files {
     'html/img/spawn/*.jpg',
 }
 
-ox_libs {
-    'locale',
-}
-
 dependencies {
     'rsg-core',
-    'ox_lib'
 }

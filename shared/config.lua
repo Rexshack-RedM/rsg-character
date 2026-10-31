@@ -360,7 +360,7 @@ RSG.Cloakroom = {
     vector3(2550.67, -1159.46, 53.73)   -- saint denis
 }
 
--- ox_target wardrobe props (opens the cloakroom / outfits menu)
+-- rsg-target wardrobe props (opens the cloakroom / outfits menu)
 RSG.WardrobeTarget = {
     enabled  = true,
     distance = 2.0,

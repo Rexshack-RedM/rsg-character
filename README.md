@@ -25,7 +25,7 @@ Character selection, creation, clothing store and spawn system for **RSG-Core** 
 - Clothing stores in Valentine, Rhodes, Saint Denis, Blackwater, Strawberry, Armadillo and Tumbleweed, with map blips.
 - Clothing is split into categories (Head, Shirts & Vests, Belts & Holsters, Coats, Legs, Feet, Hands, Accessories, Misc Gear).
 - Each category has its own price, paid in cash.
-- Every purchase is saved as a named outfit (up to 30). Wear or delete them at a cloakroom or any wardrobe/dresser prop (ox_target).
+- Every purchase is saved as a named outfit (up to 30). Wear or delete them at a cloakroom or any wardrobe/dresser prop (rsg-target).
 - New characters get a protected **Default** outfit that can't be deleted.
 - The server checks every clothing purchase and outfit change.
 - Configurable store door states (open or locked).
@@ -44,12 +44,10 @@ Character selection, creation, clothing store and spawn system for **RSG-Core** 
 ---
 
 ## Dependencies
-
 - [rsg-core](https://github.com/Rexshack-RedM/rsg-core)
-- [ox_lib](https://github.com/Rexshack-RedM/ox_lib)
 - [oxmysql](https://github.com/Rexshack-RedM/oxmysql)
 - [rsg-inventory](https://github.com/Rexshack-RedM/rsg-inventory) (starter items)
-- Optional: [ox_target](https://github.com/Rexshack-RedM/ox_target) (wardrobe props), [rsg-weather](https://github.com/Rexshack-RedM/rsg-weather) (paused during character select)
+- Optional: [rsg-target](https://github.com/Rexshack-RedM/rsg-target) (wardrobe props), [rsg-weather](https://github.com/Rexshack-RedM/rsg-weather) (paused during character select)
 
 ---
 
@@ -85,7 +83,6 @@ The `is_default` column is added automatically on start if it's missing, and exi
 
 ```cfg
 ensure oxmysql
-ensure ox_lib
 ensure rsg-core
 ensure rsg-character
 ```
@@ -116,7 +113,7 @@ All settings are in `shared/config.lua`.
 | `RSG.SetDoorState` | Store door hashes and state (`0` = open, `1` = locked). |
 | `RSG.Zones1` | Clothing store locations: `blipcoords`, `fittingcoords`, `quitcoords`, `promtcoords` and `showblip`. |
 | `RSG.Cloakroom` | Wardrobe locations (vector3). |
-| `RSG.WardrobeTarget` | ox_target wardrobe props: `enabled`, `distance`, `icon`, `label`, `models`. When enabled, saved outfits can be worn at any of these props. |
+| `RSG.WardrobeTarget` | rsg-target wardrobe props: `enabled`, `distance`, `icon`, `label`, `models`. When enabled, saved outfits can be worn at any of these props. |
 | `RSG.MenuElements` | Which clothing categories appear under each store menu section. |
 | `RSG.Price` | Cash price for each clothing category. |
 
@@ -130,9 +127,9 @@ Put the image in `html/img/spawn/`. Existing entries use a locale key (`locale('
 Replace the placeholder `https://discord.com/api/webhooks/XXXXXXXX/XXXXXXXX` URLs with your own. A category that is enabled but has no valid URL prints a warning to the server console instead of throwing an error.
 
 ### Locales
-Text is loaded through ox_lib locales from `locales/<lang>.json`. Choose the language with the ox_lib convar in `server.cfg`, for example:
+Text is loaded by rsg-core's shared locale loader (`@rsg-core/shared/locale.lua`) from `locales/<lang>.json`. Choose the language in `server.cfg` (`ox:locale` still works as a fallback), for example:
 ```cfg
-setr ox:locale en
+setr rsg:locale en
 ```
 
 ---
@@ -206,6 +203,27 @@ exports['rsg-character']:IsCothingActive()
 | `rsg-character:client:OpenSpawnSelect` | client | Opens the spawn select screen. |
 | `rsg-character:client:ApplySkin` | client | Applies a skin and clothes to the player. |
 | `rsg-character:client:outfits` | client | Opens the outfit wardrobe. |
+
+### Callbacks (rsg-core)
+| Callback | Returns |
+|---|---|
+| `rsg-character:server:getAppearance` | `{ skin, clothes }` for the logged-in character, or `nil` |
+| `rsg-multicharacter:server:getAppearance` | Same, kept for older resources (`{ skin = {}, clothes = {} }` when none) |
+| `rsg-character:server:getOutfits` | The character's saved outfits |
+
+```lua
+local data = RSGCore.Functions.AwaitCallback('rsg-character:server:getAppearance')
+```
+
+## Changelog
+### 3.0.10
+- Notifications now use rsg-core notify and callbacks use rsg-core callbacks 
+- Locales load through rsg-core's shared loader; ox_lib is no longer a dependency (data files load with rsg-core's `require`).
+- Wardrobe props use rsg-target instead of ox_target.
+- Removed the unused `rsg-character:server:LoadSkin` net event: a logged-in player without a saved skin could call it to open a free creator session.
+- Wearing a saved outfit re-validates its clothes on the server before applying it.
+- The clothing store checks your cash before you leave the fitting room, so you keep your selection if you can't afford it.
+- The client no longer sends its gender when buying clothes (the server already uses the character record).
 
 ---
 

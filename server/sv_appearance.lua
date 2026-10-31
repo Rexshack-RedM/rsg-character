@@ -158,10 +158,6 @@ function RSG.LoadSkinForSource(src)
     return false
 end
 
-RegisterNetEvent('rsg-character:server:LoadSkin', function()
-    RSG.LoadSkinForSource(source)
-end)
-
 local function GetAppearance(src)
     local Player = RSGCore.Functions.GetPlayer(src)
     if not Player then return nil end
@@ -171,7 +167,9 @@ local function GetAppearance(src)
     return { skin = skin, clothes = SafeDecode(row.clothes, {}) }
 end
 
-lib.callback.register('rsg-character:server:getAppearance', GetAppearance)
+RSGCore.Functions.CreateCallback('rsg-character:server:getAppearance', function(src, cb)
+    cb(GetAppearance(src))
+end)
 
 -- legacy name kept for external resources that still call it
 RSGCore.Functions.CreateCallback('rsg-multicharacter:server:getAppearance', function(src, cb)
@@ -185,7 +183,7 @@ local validNationality
 local function IsValidNationality(value)
     if not validNationality then
         validNationality = {}
-        -- The client builds the dropdown with the PLAYER's ox_lib language, which can
+        -- The client builds the dropdown in its own locale language, which can
         -- differ from the server's language. Accept the translation from every locale
         -- file so players on any language can create a character.
         local resource = GetCurrentResourceName()
@@ -229,7 +227,7 @@ RegisterNetEvent('rsg-multicharacter:server:createCharacter', function(newData)
         or not IsValidNationality(newData.nationality) or not RSG.IsValidBirthdate(newData.birthdate) then
         -- never fail silently: the client has already closed the creator
         CreatorSessions[src] = nil
-        TriggerClientEvent('ox_lib:notify', src, { title = locale('missing_character_info.title'), description = locale('missing_character_info.description'), type = 'error', duration = 7000 })
+        TriggerClientEvent('RSGCore:Client:Notify', src, { title = locale('missing_character_info.title'), description = locale('missing_character_info.description'), type = 'error', duration = 7000 })
         TriggerClientEvent('rsg-character:client:OpenCharSelect', src)
         return
     end
@@ -239,7 +237,7 @@ RegisterNetEvent('rsg-multicharacter:server:createCharacter', function(newData)
 
     if MySQL.scalar.await('SELECT citizenid FROM players WHERE license = ? AND cid = ?', { license, cid }) then
         CreatorSessions[src] = nil
-        TriggerClientEvent('ox_lib:notify', src, { title = locale('charselect.slot_taken.title'), description = locale('charselect.slot_taken.desc'), type = 'error', duration = 5000 })
+        TriggerClientEvent('RSGCore:Client:Notify', src, { title = locale('charselect.slot_taken.title'), description = locale('charselect.slot_taken.desc'), type = 'error', duration = 5000 })
         TriggerClientEvent('rsg-character:client:OpenCharSelect', src)
         return
     end

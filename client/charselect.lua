@@ -567,7 +567,7 @@ end)
 RegisterNetEvent('rsg-character:client:CharSelectFailed', function()
     pendingDeleteLoading = false
     UI.HideLoadingScreen()
-    lib.notify({
+    RSGCore.Functions.Notify({
         title = locale('charselect.login_failed.title'),
         description = locale('charselect.login_failed.description'),
         type = 'error',

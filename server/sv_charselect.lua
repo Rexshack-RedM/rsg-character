@@ -171,7 +171,7 @@ RegisterNetEvent('rsg-character:server:RequestCreateCharacterSlot', function(cid
     selectedSex = tonumber(selectedSex) == 2 and 2 or 1
 
     if MySQL.scalar.await('SELECT citizenid FROM players WHERE license = ? AND cid = ?', { license, cid }) then
-        TriggerClientEvent('ox_lib:notify', src, { title = locale('charselect.slot_taken.title'), description = locale('charselect.slot_taken.desc'), type = 'error', duration = 5000 })
+        TriggerClientEvent('RSGCore:Client:Notify', src, { title = locale('charselect.slot_taken.title'), description = locale('charselect.slot_taken.desc'), type = 'error', duration = 5000 })
         SendSlots(src)
         return
     end
