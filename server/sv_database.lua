@@ -65,7 +65,10 @@ end
 -- Upgrades tables created by older versions. Never drops data except the older duplicate
 -- playerskins rows (only the newest row per character was ever read), and only when RSG.DedupeSkins is on.
 local function Migrate()
-    if not IndexExists('playerskins', 'uq_playerskins_citizenid') then
+    local hasUnique = MySQL.scalar.await(
+        'SELECT 1 FROM INFORMATION_SCHEMA.STATISTICS WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = ? AND COLUMN_NAME = ? AND NON_UNIQUE = 0 AND SEQ_IN_INDEX = 1 LIMIT 1',
+        { 'playerskins', 'citizenid' }) ~= nil
+    if not hasUnique then
         local dup = MySQL.scalar.await('SELECT citizenid FROM playerskins GROUP BY citizenid HAVING COUNT(*) > 1 LIMIT 1')
         if dup and RSG.DedupeSkins ~= false then
             local removed = MySQL.update.await('DELETE s1 FROM playerskins s1 INNER JOIN playerskins s2 ON s1.citizenid = s2.citizenid AND s1.id < s2.id')

@@ -127,7 +127,7 @@ Characters hidden by a soft delete: `citizenid` (PK), `license`, `original_cid` 
 On `MySQL.ready` the script:
 0. When `RSG.AutoDatabase = true`, runs the `CREATE TABLE IF NOT EXISTS` statements from `server/sv_database.lua` (printing a green "database tables ready" or a red error). Set it to `false` and import `install.sql` to install manually.
 1. Adds `is_default` to `playeroutfit` if missing, then the `citizen_default` index.
-1b. Adds the unique key to `playerskins`. Older duplicate rows are removed first when `RSG.DedupeSkins = true` (only the newest row per character was ever read); otherwise the key is skipped with a console warning.
+1b. Adds the unique key to `playerskins` (skipped when a unique key on `citizenid` already exists, as in the txAdmin recipe). Older duplicate rows are removed first when `RSG.DedupeSkins = true` (only the newest row per character was ever read); otherwise the key is skipped with a console warning.
 1c. Fills `rsg_character_names` for characters that are not in it yet.
 2. Creates a Default outfit for every character that has clothes but no Default yet, and prints how many it created.
 
